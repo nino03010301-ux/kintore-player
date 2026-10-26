@@ -212,7 +212,10 @@ input[type=text],input[type=url],select{border:1px solid var(--line);background:
       </div>
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
-          <h2 style="margin:0" id="cutTitle">—</h2>
+          <div class="form-row" style="flex:1 1 320px">
+            <input type="text" id="cutTitle" aria-label="種目名">
+            <button class="btn" id="renameBtn">名前を変える</button>
+          </div>
           <button class="btn danger" id="delVideoBtn">この動画を削除</button>
         </div>
         <div class="video-box"><div id="cutPlayer"></div></div>
@@ -609,8 +612,8 @@ function renderCut(){
   $('vlist').querySelectorAll('button').forEach(b=>b.onclick=()=>{ cutId=b.dataset.id; renderCut(); loadCut(); });
   const v = vById(cutId);
   $('delVideoBtn').disabled = !v;
-  if(!v){ $('cutTitle').textContent='動画がありません'; return; }
-  $('cutTitle').textContent = v.name;
+  if(!v){ $('cutTitle').value=''; $('cutTitle').placeholder='動画がありません'; return; }
+  if(document.activeElement!==$('cutTitle')) $('cutTitle').value = v.name;
   $('startVal').textContent = fmt(v.start);
   $('endVal').textContent = v.end!=null ? fmt(v.end) : '最後まで';
   const len = clipLen(v);
@@ -642,6 +645,14 @@ function updateCut(fn){
 }
 $('setStart').onclick = ()=>{ const p=nowPos(); if(p==null) return toast('先に動画を再生してください'); updateCut(v=>{ v.start=p; if(v.end!=null&&v.end<=p) v.end=null; }); toast('「ここから」を '+fmt(p)+' にしました'); };
 $('setEnd').onclick = ()=>{ const p=nowPos(); if(p==null) return toast('先に動画を再生してください'); const v=vById(cutId); if(p<=v.start) return toast('「ここから」より後の位置で押してください'); updateCut(v=>v.end=p); toast('「ここまで」を '+fmt(p)+' にしました'); };
+$('renameBtn').onclick = ()=>{
+  const v = vById(cutId); if(!v) return;
+  const n = $('cutTitle').value.trim();
+  if(!n){ toast('名前を入れてください'); $('cutTitle').value=v.name; return; }
+  if(n===v.name) return toast('名前は変わっていません');
+  v.name = n; markDirty(); $('cutTitle').blur(); renderCut(); toast('「'+n+'」に変えました');
+};
+$('cutTitle').addEventListener('keydown', e=>{ if(e.key==='Enter') $('renameBtn').click(); });
 $('clearEnd').onclick = ()=>updateCut(v=>v.end=null);
 document.querySelectorAll('[data-adj]').forEach(b=>b.onclick=()=>{
   const [which,d] = b.dataset.adj.split(':'); const n=Number(d);
