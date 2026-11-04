@@ -450,6 +450,11 @@
   $("keyBtn").addEventListener("click", function(){
     var v = $("keyIn").value.trim();
     if (!v) return;
+    if (/^https?:|github|\.io/i.test(v)){
+      showBanner("合言葉の欄にアプリのURLが入っています。URLを消して、合言葉（英数字の文字）を貼り付けてください。", true);
+      setSaveState("合言葉ではなくURLが入っています", "ng");
+      return;
+    }
     var prev = KEY;
     KEY = v;
     $("keyBtn").disabled = true;
