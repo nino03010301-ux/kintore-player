@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>APEXカウンター</title>
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="APEX">
+<meta name="theme-color" content="#121417">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<style>
+  :root{
+    --bg:#121417; --card:#1c2026; --line:#2c323b; --text:#eef1f5; --sub:#9aa4b2;
+    --win:#2fbf71; --lose:#e5484d; --accent:#ff6a3d; --warn:#ffb020;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;background:var(--bg);color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Noto Sans JP",sans-serif;
+    -webkit-text-size-adjust:100%;}
+  body{padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(24px + env(safe-area-inset-bottom,0px));
+    max-width:520px;margin:0 auto}
+  h1{font-size:20px;margin:4px 0 10px;letter-spacing:.04em}
+  h1 span{color:var(--accent)}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:12px}
+  .banner{display:none;border-radius:12px;padding:12px;margin-bottom:12px;font-size:14px;line-height:1.5}
+  .banner.show{display:block}
+  .banner.err{background:#3a1416;border:1px solid var(--lose);color:#ffd6d7}
+  .banner.info{background:#1e2a3a;border:1px solid #3b5b85;color:#d5e6ff}
+  .rankrow{display:flex;gap:8px;align-items:center}
+  .rankrow label{font-size:13px;color:var(--sub);white-space:nowrap}
+  .rankrow input{flex:1;min-width:0;background:#0f1114;border:1px solid var(--line);color:var(--text);
+    border-radius:10px;padding:10px;font-size:16px}
+  .btn{border:none;border-radius:12px;font-weight:700;cursor:pointer;font-size:15px;padding:12px 14px;color:#fff;background:#3a414c}
+  .btn:disabled{opacity:.35;cursor:not-allowed}
+  .goal{font-size:12px;color:var(--sub);margin-top:8px}
+  .today-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:8px}
+  .today-head .d{font-weight:700}
+  .today-head .s{font-size:12px;color:var(--sub)}
+  .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;text-align:center}
+  .stat{background:#15181d;border-radius:10px;padding:10px 4px}
+  .stat .v{font-size:24px;font-weight:800}
+  .stat .k{font-size:11px;color:var(--sub);margin-top:2px}
+  .v.win{color:var(--win)} .v.lose{color:var(--lose)}
+  .sub2{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:8px;text-align:center}
+  .streak{margin-top:10px;text-align:center;font-weight:700;font-size:15px;padding:8px;border-radius:10px;background:#15181d}
+  .streak.w{color:var(--win)} .streak.l{color:var(--lose)}
+  .stop{display:none;margin-top:10px;text-align:center;background:#3a2a0a;border:2px solid var(--warn);
+    color:#ffe3a3;border-radius:12px;padding:14px;font-size:18px;font-weight:800;line-height:1.4}
+  .stop.show{display:block}
+  .stop small{display:block;font-size:12px;font-weight:400;color:#f3d79a;margin-top:4px}
+  .marks{margin-top:10px;font-size:22px;letter-spacing:2px;word-break:break-all;min-height:28px}
+  .marks .empty{font-size:13px;color:var(--sub);letter-spacing:0}
+  .big{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px}
+  .big .btn{padding:24px 8px;font-size:22px;border-radius:16px;line-height:1.3}
+  .big .btn small{display:block;font-size:12px;font-weight:600;opacity:.9}
+  .bw{background:var(--win)} .bl{background:var(--lose)}
+  .undo-wrap{display:flex;flex-direction:column;gap:8px;margin-bottom:6px}
+  .confirm{display:none;background:#15181d;border:1px solid var(--line);border-radius:12px;padding:12px;font-size:14px}
+  .confirm.show{display:block}
+  .confirm .row{display:flex;gap:8px;margin-top:10px}
+  .confirm .row .btn{flex:1}
+  .save{font-size:13px;color:var(--sub);text-align:center;min-height:20px;margin:6px 0 12px}
+  .save.ok{color:var(--win)} .save.ng{color:var(--lose);font-weight:700}
+  h2{font-size:15px;margin:0 0 8px}
+  .hist{list-style:none;margin:0;padding:0}
+  .hist li{border-top:1px solid var(--line);padding:10px 0}
+  .hist li:first-child{border-top:none}
+  .hist .top{display:flex;justify-content:space-between;font-size:14px}
+  .hist .top b{font-weight:700}
+  .hist .top span{color:var(--sub);font-size:13px}
+  .hist .mk{font-size:16px;letter-spacing:1px;margin-top:4px;word-break:break-all}
+  .muted{color:var(--sub);font-size:13px}
+</style>
+</head>
+<body>
+  <h1>APEX <span>カウンター</span></h1>
+
+  <div id="banner" class="banner"></div>
+
+  <div class="card" id="setup" style="display:none">
+    <h2>🔑 はじめに合言葉を入れてください</h2>
+    <div class="muted" style="margin-bottom:8px">最初の1回だけです。合言葉はこのスマホにだけ覚えさせます。</div>
+    <div class="rankrow">
+      <input id="keyIn" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="合言葉">
+      <button id="keyBtn" class="btn">つなぐ</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="rankrow">
+      <label for="rank">今のランク</label>
+      <input id="rank" type="text" maxlength="30" placeholder="例：ルーキーIII" disabled>
+      <button id="rankSave" class="btn" disabled>保存</button>
+    </div>
+    <div class="goal">今シーズンの目標：プラチナ　／　⚪︎＝ポイントがプラス、❌＝マイナス</div>
+  </div>
+
+  <div class="card">
+    <div class="today-head">
+      <div class="d" id="todayLabel">今日</div>
+      <div class="s">朝5時で日付が切り替わります</div>
+    </div>
+    <div class="stats">
+      <div class="stat"><div class="v win" id="tW">0</div><div class="k">⚪︎ 今日</div></div>
+      <div class="stat"><div class="v lose" id="tL">0</div><div class="k">❌ 今日</div></div>
+      <div class="stat"><div class="v" id="tRate">—</div><div class="k">今日の勝率</div></div>
+    </div>
+    <div class="sub2">
+      <div class="stat"><div class="v" id="aRate" style="font-size:20px">—</div><div class="k">これまで全体の勝率</div></div>
+      <div class="stat"><div class="v" id="aCnt" style="font-size:20px">0</div><div class="k">これまでの試合数</div></div>
+    </div>
+    <div class="streak" id="streak">今日はまだ記録がありません</div>
+    <div class="stop" id="stop">❌が3回続きました。今日は終わり！<small>このあとも記録はできます</small></div>
+    <div class="marks" id="marks"><span class="empty">試合が終わったら下のボタンを押してください</span></div>
+  </div>
+
+  <div class="big">
+    <button class="btn bw" id="bWin" disabled>⚪︎<small>プラスで終了</small></button>
+    <button class="btn bl" id="bLose" disabled>❌<small>マイナスで終了</small></button>
+  </div>
+
+  <div class="undo-wrap">
+    <button class="btn" id="bUndo" disabled>↩ 1つ戻す</button>
+    <div class="confirm" id="confirm">
+      <div id="confirmText"></div>
+      <div class="row">
+        <button class="btn" id="cNo">やめる</button>
+        <button class="btn bl" id="cYes">取り消す</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="save" id="save">保存先に接続しています…</div>
+
+  <div class="card">
+    <h2>これまでの記録</h2>
+    <ul class="hist" id="hist"><li class="muted">読み込み中…</li></ul>
+  </div>
+
+  <div class="card" id="homeTip" style="display:none">
+    <h2>📱 ホーム画面に追加してください</h2>
+    <div class="muted" style="line-height:1.6">Safariの下の「共有ボタン（□に↑）」→「ホーム画面に追加」を押すと、アプリのように開けます。</div>
+  </div>
+
+  <div class="card">
+    <h2>保存の状態</h2>
+    <div class="muted" id="diag" style="line-height:1.7">確認中…</div>
+  </div>
+
+<script>
+(function(){
+  // ===== 保存先（Googleスプレッドシートの保存プログラム） =====
+  var SAVE_URL = "PASTE_SAVE_URL_HERE";
+  var KEY = "";   // 合言葉はリポジトリに書かず、初回にスマホへ入力してもらう
+  try { KEY = localStorage.getItem("apexKey") || ""; } catch(e) {}
+
+  var ready = false;      // 保存先とつながったら true
+  var records = [];       // {id, ts, r:"w"|"l", day}
+  var rankMemo = "";
+  var busy = false;
+  var lastErr = "";
+  var DAY_SHIFT = 5 * 3600 * 1000;
+  var WD = ["日","月","火","水","木","金","土"];
+
+  function $(id){ return document.getElementById(id); }
+
+  function errText(e){
+    if (!e) return "不明なエラー";
+    var code = e.code || e.name || "";
+    return (code && code !== "Error" ? code + " / " : "") + (e.message || String(e));
+  }
+  function showBanner(msg, isErr){
+    var b = $("banner");
+    if (!msg){ b.className = "banner"; b.textContent = ""; return; }
+    b.className = "banner show " + (isErr ? "err" : "info");
+    b.textContent = msg;
+  }
+  function setSaveState(msg, kind){
+    var s = $("save");
+    s.className = "save" + (kind ? " " + kind : "");
+    s.textContent = msg;
+    if (kind === "ng") lastErr = msg;
+    renderDiag();
+  }
+  var lastCheck = "まだ";
+  function renderDiag(){
+    var standalone = (window.navigator.standalone === true) ||
+      (window.matchMedia && window.matchMedia("(display-mode: standalone)").matches);
+    $("homeTip").style.display = (/iPhone|iPad/.test(navigator.userAgent) && !standalone) ? "block" : "none";
+    var lines = [
+      "保存先との接続：" + (ready ? "✅ つながっています" : "❌ つながっていません"),
+      "書き込み→読み戻しの確認：" + lastCheck,
+      "開き方：" + (standalone ? "ホーム画面のアイコン" : "ブラウザ"),
+      "最後のエラー：" + (lastErr || "なし")
+    ];
+    $("diag").textContent = "";
+    lines.forEach(function(t){ var d = document.createElement("div"); d.textContent = t; $("diag").appendChild(d); });
+  }
+
+  // ---------- 保存先とのやりとり ----------
+  function call(params){
+    if (SAVE_URL.indexOf("https://") !== 0) return Promise.reject(new Error("保存先がまだ設定されていません"));
+    var q = "key=" + encodeURIComponent(KEY) + "&_=" + Date.now();
+    Object.keys(params).forEach(function(k){ q += "&" + k + "=" + encodeURIComponent(params[k]); });
+    var ctrl = window.AbortController ? new AbortController() : null;
+    var timer = setTimeout(function(){ if (ctrl) ctrl.abort(); }, 20000);
+    return fetch(SAVE_URL + "?" + q, { method: "GET", redirect: "follow", cache: "no-store", signal: ctrl ? ctrl.signal : undefined })
+      .then(function(res){
+        clearTimeout(timer);
+        if (!res.ok) throw new Error("通信エラー（" + res.status + "）");
+        return res.json();
+      }, function(e){
+        clearTimeout(timer);
+        if (e && e.name === "AbortError") throw new Error("20秒たっても返事がありませんでした");
+        throw new Error("通信できませんでした（電波を確認してください）");
+      })
+      .then(function(j){
+        if (!j || j.ok !== true) throw new Error((j && j.error) || "保存先から変な返事が来ました");
+        return j;
+      });
+  }
+
+  function dayKey(ts){
+    var d = new Date(ts - DAY_SHIFT);
+    var m = d.getMonth()+1, dd = d.getDate();
+    return d.getFullYear() + "-" + (m<10?"0":"") + m + "-" + (dd<10?"0":"") + dd;
+  }
+  function dayLabel(key){
+    var p = key.split("-");
+    var d = new Date(Number(p[0]), Number(p[1])-1, Number(p[2]));
+    return Number(p[1]) + "/" + Number(p[2]) + "（" + WD[d.getDay()] + "）";
+  }
+  function mark(r){ return r === "w" ? "⚪︎" : "❌"; }
+  function pct(w, n){ return n ? Math.round(w / n * 100) + "%" : "—"; }
+
+  function setButtons(){
+    var ok = ready && !busy;
+    $("bWin").disabled = !ok;
+    $("bLose").disabled = !ok;
+    $("bUndo").disabled = !ok || records.length === 0;
+    $("rank").disabled = !ready;
+    $("rankSave").disabled = !ok;
+  }
+
+  // ---------- 描画 ----------
+  function render(){
+    records.sort(function(a,b){ return a.ts - b.ts; });
+    var today = dayKey(Date.now());
+    $("todayLabel").textContent = "今日 " + dayLabel(today);
+
+    var todays = records.filter(function(r){ return r.day === today; });
+    var tw = todays.filter(function(r){ return r.r === "w"; }).length;
+    $("tW").textContent = tw;
+    $("tL").textContent = todays.length - tw;
+    $("tRate").textContent = pct(tw, todays.length);
+
+    var aw = records.filter(function(r){ return r.r === "w"; }).length;
+    $("aRate").textContent = pct(aw, records.length);
+    $("aCnt").textContent = records.length;
+
+    var st = $("streak");
+    $("stop").className = "stop";
+    if (!todays.length){
+      st.className = "streak"; st.textContent = "今日はまだ記録がありません";
+    } else {
+      var last = todays[todays.length-1].r, n = 0;
+      for (var i = todays.length-1; i >= 0 && todays[i].r === last; i--) n++;
+      st.className = "streak " + last;
+      st.textContent = (last === "w" ? "⚪︎ " + n + "連勝中" : "❌ " + n + "連続マイナス中");
+      if (last === "l" && n >= 3) $("stop").className = "stop show";
+    }
+
+    var mk = $("marks");
+    if (!todays.length){
+      mk.innerHTML = '<span class="empty">試合が終わったら下のボタンを押してください</span>';
+    } else {
+      mk.textContent = todays.map(function(r){ return mark(r.r); }).join("");
+    }
+
+    var byDay = {};
+    records.forEach(function(r){ (byDay[r.day] = byDay[r.day] || []).push(r); });
+    var days = Object.keys(byDay).sort().reverse();
+    var ul = $("hist");
+    ul.innerHTML = "";
+    if (!days.length){
+      var li0 = document.createElement("li");
+      li0.className = "muted"; li0.textContent = ready ? "まだ記録がありません" : "読み込み中…";
+      ul.appendChild(li0);
+    }
+    days.forEach(function(k){
+      var list = byDay[k];
+      var w = list.filter(function(r){ return r.r === "w"; }).length;
+      var li = document.createElement("li");
+      var top = document.createElement("div"); top.className = "top";
+      var b = document.createElement("b"); b.textContent = dayLabel(k) + (k === today ? " 今日" : "");
+      var s = document.createElement("span"); s.textContent = w + "勝" + (list.length - w) + "敗　" + pct(w, list.length);
+      top.appendChild(b); top.appendChild(s);
+      var m = document.createElement("div"); m.className = "mk";
+      m.textContent = list.map(function(r){ return mark(r.r); }).join("");
+      li.appendChild(top); li.appendChild(m);
+      ul.appendChild(li);
+    });
+
+    if (document.activeElement !== $("rank")) $("rank").value = rankMemo;
+    setButtons();
+    renderDiag();
+  }
+
+  // ---------- 読み込み ----------
+  function toRec(g){
+    var ts = Number(g && g.ts) || 0;
+    return { id: String((g && g.id) || ""), ts: ts, r: g && g.r === "w" ? "w" : "l", day: ts ? dayKey(ts) : "" };
+  }
+  function loadAll(){
+    setSaveState("記録を読み込み中…");
+    return call({ action: "list" }).then(function(j){
+      records = (j.games || []).map(toRec).filter(function(r){ return r.ts > 0 && r.id; });
+      rankMemo = (j.rank && typeof j.rank.val === "string") ? j.rank.val : "";
+      ready = true;
+      setSaveState("記録を読み込みました（" + records.length + "試合）", "ok");
+      showBanner("");
+      render();
+    }).catch(function(e){
+      setSaveState("読み込みに失敗：" + errText(e), "ng");
+      if (!ready){
+        showBanner("保存先につながりません。電波を確認して、アプリを開き直してください。つながるまで記録ボタンは押せません。", true);
+      }
+      render();
+    });
+  }
+
+  // ---------- 書き込み（読み戻し検証つき） ----------
+  function writeGame(rec){
+    setSaveState("保存中…");
+    return call({ action: "add", id: rec.id, ts: rec.ts, r: rec.r, day: rec.day })
+      .then(function(){ return call({ action: "get", id: rec.id }); })
+      .then(function(j){
+        var g = j.game;
+        if (!g || Number(g.ts) !== rec.ts || g.r !== rec.r) throw new Error("保存した記録を読み戻せませんでした");
+        lastCheck = "✅ 一致（" + new Date().toLocaleTimeString("ja-JP") + "）";
+        setSaveState("保存しました（" + mark(rec.r) + "）", "ok");
+        showBanner("");
+      })
+      .catch(function(e){
+        lastCheck = "❌ 失敗";
+        setSaveState("保存に失敗：" + errText(e), "ng");
+        showBanner("保存できていません。もう一度ボタンを押してください。", true);
+        throw e;
+      });
+  }
+
+  function deleteGame(rec){
+    setSaveState("取り消し中…");
+    return call({ action: "del", id: rec.id })
+      .then(function(){ return call({ action: "get", id: rec.id }); })
+      .then(function(j){
+        if (j.game) throw new Error("取り消したはずの記録がまだ残っています");
+        lastCheck = "✅ 一致（" + new Date().toLocaleTimeString("ja-JP") + "）";
+        setSaveState("取り消しました（" + mark(rec.r) + "）", "ok");
+        showBanner("");
+      })
+      .catch(function(e){
+        lastCheck = "❌ 失敗";
+        setSaveState("取り消しに失敗：" + errText(e), "ng");
+        showBanner("取り消しできていません。もう一度お試しください。", true);
+        throw e;
+      });
+  }
+
+  function record(r){
+    if (!ready || busy) return;
+    hideConfirm();
+    busy = true;
+    var ts = Date.now();
+    var rec = { id: "g" + ts + Math.random().toString(36).slice(2,6), ts: ts, r: r, day: dayKey(ts) };
+    records.push(rec);
+    render();
+    writeGame(rec)
+      .catch(function(){ records = records.filter(function(x){ return x.id !== rec.id; }); })  // 画面を戻す
+      .then(function(){ busy = false; render(); });
+  }
+
+  // ---------- 1つ戻す ----------
+  function lastRec(){
+    var s = records.slice().sort(function(a,b){ return a.ts - b.ts; });
+    return s[s.length-1];
+  }
+  function hideConfirm(){ $("confirm").className = "confirm"; }
+  function askUndo(){
+    var l = lastRec();
+    if (!l) return;
+    $("confirmText").textContent = "直前の記録「" + mark(l.r) + "」（" + dayLabel(l.day) + "）を取り消しますか？";
+    $("confirm").className = "confirm show";
+  }
+  function doUndo(){
+    var l = lastRec();
+    hideConfirm();
+    if (!l || !ready || busy) return;
+    busy = true;
+    records = records.filter(function(x){ return x.id !== l.id; });
+    render();
+    deleteGame(l)
+      .catch(function(){ records.push(l); })   // 失敗したら画面を戻す
+      .then(function(){ busy = false; render(); });
+  }
+
+  // ---------- ランクメモ ----------
+  function saveRank(){
+    if (!ready || busy) return;
+    var val = $("rank").value.trim().slice(0, 30);
+    var prev = rankMemo;
+    var ts = Date.now();
+    busy = true; setButtons();
+    setSaveState("保存中…");
+    call({ action: "rank", val: val, ts: ts })
+      .then(function(){ return call({ action: "getrank" }); })
+      .then(function(j){
+        if (!j.rank || j.rank.val !== val || Number(j.rank.ts) !== ts) throw new Error("保存したランクを読み戻せませんでした");
+        rankMemo = val;
+        lastCheck = "✅ 一致（" + new Date().toLocaleTimeString("ja-JP") + "）";
+        setSaveState("ランクを保存しました", "ok");
+        showBanner("");
+      })
+      .catch(function(e){
+        rankMemo = prev;
+        $("rank").value = prev;
+        lastCheck = "❌ 失敗";
+        setSaveState("ランクの保存に失敗：" + errText(e), "ng");
+        showBanner("ランクが保存できていません。もう一度お試しください。", true);
+      })
+      .then(function(){ busy = false; render(); });
+  }
+
+  // ---------- イベント ----------
+  $("bWin").addEventListener("click", function(){ record("w"); });
+  $("bLose").addEventListener("click", function(){ record("l"); });
+  $("bUndo").addEventListener("click", askUndo);
+  $("cNo").addEventListener("click", hideConfirm);
+  $("cYes").addEventListener("click", doUndo);
+  $("rankSave").addEventListener("click", saveRank);
+  $("rank").addEventListener("keydown", function(e){ if (e.key === "Enter"){ e.preventDefault(); saveRank(); } });
+  document.addEventListener("visibilitychange", function(){
+    if (document.visibilityState === "visible" && !busy && KEY) loadAll();
+  });
+  setInterval(function(){ if (!busy) render(); }, 60000);  // 朝5時の切り替えを反映
+
+  function showSetup(on){ $("setup").style.display = on ? "block" : "none"; }
+  $("keyBtn").addEventListener("click", function(){
+    var v = $("keyIn").value.trim();
+    if (!v) return;
+    var prev = KEY;
+    KEY = v;
+    $("keyBtn").disabled = true;
+    loadAll().then(function(){
+      $("keyBtn").disabled = false;
+      if (ready){
+        try { localStorage.setItem("apexKey", v); } catch(e) {}
+        showSetup(false);
+      } else {
+        KEY = prev;
+      }
+    });
+  });
+
+  render();
+  if (!KEY){
+    showSetup(true);
+    setSaveState("合言葉を入れるとつながります");
+  } else {
+    loadAll().then(function(){ if (!ready && /合言葉/.test(lastErr)) showSetup(true); });
+  }
+})();
+</script>
+</body>
+</html>
