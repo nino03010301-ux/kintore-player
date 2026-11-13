@@ -74,6 +74,21 @@ input[type=text],input[type=url],select{border:1px solid var(--line);background:
 .queue li.done{opacity:.45;text-decoration:line-through}
 .queue li.current{border-color:var(--accent);background:var(--accent-weak);font-weight:700}
 .queue .len{font-family:var(--font-num);color:var(--muted);font-variant-numeric:tabular-nums}
+.queue li{align-items:center}
+.queue .nm{flex:1;min-width:0}
+.queue .pt{display:block;font-size:11px;color:var(--muted);font-weight:500}
+.queue .rr{border:1px solid var(--line);background:var(--panel);border-radius:6px;padding:2px 8px;font-size:12px;white-space:nowrap}
+.queue .rr:hover{border-color:var(--accent);color:var(--accent)}
+.badge{display:inline-block;font-size:11px;border-radius:4px;padding:0 6px;margin-left:6px;font-weight:700;vertical-align:1px}
+.badge.unset{background:var(--accent-weak);color:var(--accent)}
+.badge.check{background:#fdecc8;color:#8a5a00}
+.notice{border:1px solid var(--warn);border-radius:8px;padding:8px 12px;margin-bottom:14px;color:var(--fg)}
+.vgroup{font-size:12px;color:var(--muted);margin:12px 0 4px;letter-spacing:.06em}
+.sugg{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px}
+.sugg li{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:8px;padding:6px 8px}
+.sugg li .t{flex:1;min-width:0}
+.sugg li small{display:block;color:var(--muted);font-size:11px}
+.sugg a{font-size:12px;color:var(--muted)}
 .remain{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);display:flex;justify-content:space-between;align-items:baseline}
 
 /* 動画と切り取り */
@@ -154,6 +169,7 @@ input[type=text],input[type=url],select{border:1px solid var(--line);background:
   <!-- トレーニング -->
   <section id="tab-play" hidden>
     <div class="days" id="dayBtns"></div>
+    <div id="weekInfo" class="muted" style="margin:-6px 0 14px"></div>
     <div class="play-grid">
       <div>
         <div class="video-box">
@@ -206,9 +222,13 @@ input[type=text],input[type=url],select{border:1px solid var(--line);background:
         <div style="display:flex;flex-direction:column;gap:8px">
           <input type="text" id="addName" placeholder="種目名(例：ワイドスクワット)">
           <input type="url" id="addUrl" placeholder="YouTubeのURL">
+          <select id="addPart" aria-label="部位"></select>
           <button class="btn primary" id="addBtn">追加する</button>
           <p id="addMsg" class="muted" style="margin:0"></p>
         </div>
+        <h2 style="margin-top:22px">おすすめ候補 <span class="muted" style="font-weight:400;font-size:12px">Claudeが探した動画</span></h2>
+        <p class="muted" style="margin:0 0 8px;font-size:13px">気に入ったものを「登録」すると候補に入ります。その後「ここから・ここまで」を決めると入れ替えに出るようになります。</p>
+        <div id="suggList"></div>
       </div>
       <div class="panel">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:12px">
@@ -218,6 +238,13 @@ input[type=text],input[type=url],select{border:1px solid var(--line);background:
           </div>
           <button class="btn danger" id="delVideoBtn">この動画を削除</button>
         </div>
+        <div class="form-row" style="margin-bottom:10px">
+          <label for="cutPart" class="muted" style="flex:0 0 auto">部位</label>
+          <select id="cutPart" style="flex:0 1 200px"></select>
+          <span id="cutState" style="flex:1 1 260px"></span>
+        </div>
+        <div id="cutCheck" class="notice" hidden>⚠ この動画は前にアプリ内で再生できず、入れ替えから外しています。下で再生できるか試して、直っていたら
+          <button class="btn" id="clearCheckBtn" style="padding:2px 10px">「要確認」を外す</button></div>
         <div class="video-box"><div id="cutPlayer"></div></div>
         <p class="muted" style="margin:10px 0 0">動画を再生して、始めたい所で「ここから」、終わりたい所で「ここまで」を押してください。押すと自動で保存されます。</p>
         <div class="marks">
@@ -245,6 +272,7 @@ input[type=text],input[type=url],select{border:1px solid var(--line);background:
           <button class="btn" id="previewStart">「ここから」を再生</button>
           <button class="btn" id="previewEnd">「ここまで」の5秒前から再生</button>
           <span class="muted" id="cutLen"></span>
+          <button class="btn primary" id="cutOkBtn" hidden>この切り取りで設定完了</button>
         </div>
       </div>
     </div>
@@ -252,7 +280,10 @@ input[type=text],input[type=url],select{border:1px solid var(--line);background:
 
   <!-- 曜日メニュー -->
   <section id="tab-menu" hidden>
-    <p class="muted" style="margin-top:0">動画を選んで「追加」すると最後に入ります。↑↓で順番を入れ替えできます。変更は自動で保存されます。</p>
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:12px">
+      <p class="muted" style="margin:0">各曜日は「部位の枠」の並びです。毎週月曜に、枠ごとにその部位の候補からくじ引きで種目が決まります（先週と同じ種目・同じ週の別の日と同じ種目はなるべく避けます）。🎲でその枠だけ引き直し。変更は自動で保存されます。</p>
+      <button class="btn" id="redrawWeekBtn">今週の種目を全部組み直す</button>
+    </div>
     <div class="menu-grid" id="menuGrid"></div>
   </section>
 
@@ -290,18 +321,47 @@ const LS_KEY = 'kintore.saveKey';
 const LS_BACKUP = 'kintore.backup';      // 送信待ちデータの控え(保存に失敗したときに残る)
 const DAYS = [{k:'mon',l:'月曜',w:1},{k:'wed',l:'水曜',w:3},{k:'fri',l:'金曜',w:5}];
 
+/* 部位。曜日メニューは「部位の枠」の並びで持ち、毎週その部位の候補からくじ引きで種目を決める */
+const PARTS = [{k:'leg',l:'脚'},{k:'chest',l:'胸・腕'},{k:'back',l:'背中'},{k:'glute',l:'お尻'},{k:'abs',l:'お腹'}];
+const ORIGINAL_PARTS = {v1:'leg',v2:'leg',v3:'chest',v4:'back',v5:'glute',v6:'abs',v7:'abs'};
+/* Claudeが探したおすすめ候補(日本語・道具なし・埋め込み再生できることを確認済み 2026-11-13) */
+const SUGGEST = [
+  {part:'leg',   name:'ワイドスクワット',         yt:'I5biGSH9DxE', by:'CALISLIFE自重トレ', len:'2:04'},
+  {part:'leg',   name:'ブルガリアンスクワット',   yt:'AqKiDWd5WDw', by:'MELOS', len:'4:20'},
+  {part:'leg',   name:'サイドランジ',             yt:'pXrjm2rqytw', by:'MELOS', len:'2:02'},
+  {part:'leg',   name:'フロントランジ',           yt:'ZRfEIEeWh0I', by:'MELOS', len:'2:00'},
+  {part:'leg',   name:'カーフレイズ(ふくらはぎ)', yt:'8EeE5QYHg_Q', by:'CALISLIFE自重トレ', len:'5:15'},
+  {part:'chest', name:'膝つき腕立て伏せ',         yt:'YwtqHZqFDTc', by:'MELOS', len:'2:39'},
+  {part:'chest', name:'ショルダータッププランク', yt:'BEdL5Nkec5k', by:'MELOS', len:'2:22'},
+  {part:'back',  name:'リバーススノーエンジェル', yt:'GMj-5ZOdQ4E', by:'Smartlog', len:'1:24'},
+  {part:'back',  name:'バックエクステンション',   yt:'YvQZ7CAIFlA', by:'MELOS', len:'3:10'},
+  {part:'back',  name:'うつ伏せ背中トレ',         yt:'fOPs7a6VIDg', by:'Yuzu pilates', len:'4:16'},
+  {part:'glute', name:'バックキック',             yt:'d94NIixNv2M', by:'MELOS', len:'3:58'},
+  {part:'glute', name:'ワンレッグヒップリフト',   yt:'Rk5dK46HtbU', by:'MELOS', len:'3:04'},
+  {part:'glute', name:'ファイヤーハイドラント',   yt:'NyEz6ZlRxLY', by:'MELOS', len:'4:00'},
+  {part:'abs',   name:'レッグレイズ',             yt:'y_sZA8ixCBw', by:'MELOS', len:'2:10'},
+  {part:'abs',   name:'プランク',                 yt:'UgkU2S8VUX4', by:'MELOS', len:'2:20'},
+  {part:'abs',   name:'ロシアンツイスト',         yt:'FVQ8KN2g-ig', by:'MELOS', len:'3:07'},
+  {part:'abs',   name:'バイシクルクランチ',       yt:'kXsKYJcXxpA', by:'MELOS', len:'1:45'},
+  {part:'abs',   name:'リバースクランチ',         yt:'EhX4ZtBBh34', by:'MELOS', len:'3:41'}
+];
+const PART_GOAL = {leg:6, chest:3, back:3, glute:3, abs:6}; // 部位ごとの候補数の目安
+
 const DEFAULT_DATA = {
-  version: 1,
+  version: 2,
   videos: [
-    {id:'v1', name:'スクワット',     yt:'Yz8mdzbCQ9U', start:0, end:null},
-    {id:'v2', name:'バックランジ',   yt:'b11jX8_G6SE', start:0, end:null},
-    {id:'v3', name:'壁腕立て伏せ',   yt:'SNIiKf6_rNk', start:0, end:null},
-    {id:'v4', name:'スーパーマン',   yt:'xx_-BlN0c7U', start:0, end:null},
-    {id:'v5', name:'ヒップリフト',   yt:'FdEmJ3wPC_Y', start:0, end:null},
-    {id:'v6', name:'デッドバグ',     yt:'Wb7_mqepkfw', start:0, end:null},
-    {id:'v7', name:'クランチ',       yt:'B5sMPhptrhs', start:0, end:null}
+    {id:'v1', name:'スクワット',     yt:'Yz8mdzbCQ9U', start:0, end:null, part:'leg',   cutSet:true},
+    {id:'v2', name:'バックランジ',   yt:'b11jX8_G6SE', start:0, end:null, part:'leg',   cutSet:true},
+    {id:'v3', name:'壁腕立て伏せ',   yt:'SNIiKf6_rNk', start:0, end:null, part:'chest', cutSet:true},
+    {id:'v4', name:'スーパーマン',   yt:'xx_-BlN0c7U', start:0, end:null, part:'back',  cutSet:true},
+    {id:'v5', name:'ヒップリフト',   yt:'FdEmJ3wPC_Y', start:0, end:null, part:'glute', cutSet:true},
+    {id:'v6', name:'デッドバグ',     yt:'Wb7_mqepkfw', start:0, end:null, part:'abs',   cutSet:true},
+    {id:'v7', name:'クランチ',       yt:'B5sMPhptrhs', start:0, end:null, part:'abs',   cutSet:true}
   ],
-  menus: { mon:['v1','v3','v4','v5','v7'], wed:['v1','v2','v5','v6'], fri:['v3','v4','v7','v6'] },
+  menus: { mon:['v1','v3','v4','v5','v7'], wed:['v1','v2','v5','v6'], fri:['v3','v4','v7','v6'] }, // 旧形式(控えとして残す)
+  slots: { mon:['leg','chest','back','glute','abs'], wed:['leg','leg','glute','abs'], fri:['chest','back','abs','abs'] },
+  plan: null,     // 今週の組み合わせ {week:'YYYY-MM-DD(月曜)', picks:{mon:[動画id…],…}}
+  history: [],    // 過去の週の組み合わせ(新しい順、8週ぶん)
   done: [],
   durations: {}   // 動画全体の長さ(秒)を覚えておく(残り時間の目安用)
 };
@@ -343,6 +403,76 @@ function clipLen(v){
   return Math.max(0, end - (v.start||0));
 }
 
+/* ================= 部位と毎週の入れ替え ================= */
+function partLabel(k){ const p=PARTS.find(x=>x.k===k); return p?p.l:'部位なし'; }
+function isFixed(s){ return typeof s==='string' && s.startsWith('v:'); }
+function slotLabel(s){ if(isFixed(s)){ const v=vById(s.slice(2)); return '固定：'+(v?v.name:'(削除済み)'); } return partLabel(s); }
+function usable(v){ return v && v.part && v.cutSet && !v.needCheck; }  // 入れ替えに出してよい種目
+function weekKey(d){ d=new Date(d||Date.now()); d.setHours(12,0,0,0); d.setDate(d.getDate()-((d.getDay()+6)%7)); return todayStr(d); }
+function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
+function lastWeekIds(){
+  const h = (data.history||[]).find(x=>x && x.week!==(data.plan&&data.plan.week));
+  const s = new Set(); if(h&&h.picks) Object.values(h.picks).forEach(a=>(a||[]).forEach(id=>id&&s.add(id))); return s;
+}
+function idsInDays(picks, days){ const s=new Set(); days.forEach(k=>(picks[k]||[]).forEach(id=>id&&s.add(id))); return s; }
+function candidatesOf(part){
+  let c = data.videos.filter(v=>v.part===part && usable(v));
+  if(!c.length) c = data.videos.filter(v=>v.part===part && !v.needCheck); // 候補が全くないときの非常用
+  if(!c.length) c = data.videos.filter(v=>v.part===part);
+  return c;
+}
+/* 指定した曜日の種目をくじ引きで決める(ほかの曜日の分はそのまま) */
+function drawDays(days){
+  const picks = data.plan.picks;
+  const others = DAYS.map(d=>d.k).filter(k=>!days.includes(k));
+  const usedOther = idsInDays(picks, others), last = lastWeekIds();
+  days.forEach(k=>{ picks[k] = (data.slots[k]||[]).map(s=>isFixed(s) && vById(s.slice(2)) ? s.slice(2) : null); });
+  PARTS.forEach(p=>{
+    const pos = []; days.forEach(k=>(data.slots[k]||[]).forEach((s,i)=>{ if(s===p.k) pos.push([k,i]); }));
+    if(!pos.length) return;
+    const c = candidatesOf(p.k);
+    // 先週も今週のほかの日も使っていない → 先週使った → 今週ほかの日で使った、の順に優先
+    const pool = [ ...shuffle(c.filter(v=>!usedOther.has(v.id)&&!last.has(v.id))),
+                   ...shuffle(c.filter(v=>!usedOther.has(v.id)&& last.has(v.id))),
+                   ...shuffle(c.filter(v=> usedOther.has(v.id))) ];
+    pos.forEach(([k,i],j)=>{ picks[k][i] = pool.length ? pool[j%pool.length].id : null; });
+  });
+}
+/* 今週の組み合わせを用意する。週が変わっていれば新しく引く。おかしな所があればその曜日だけ引き直す */
+function ensureWeekPlan(){
+  const wk = weekKey();
+  let changed = false;
+  if(!data.plan || data.plan.week !== wk){
+    if(data.plan && data.plan.picks){ data.history = [data.plan, ...(data.history||[]).filter(h=>h.week!==data.plan.week)].slice(0,8); }
+    data.plan = {week:wk, picks:{}};
+    drawDays(DAYS.map(d=>d.k));
+    changed = true;
+  } else {
+    const bad = DAYS.map(d=>d.k).filter(k=>{
+      const p=data.plan.picks[k], s=data.slots[k]||[];
+      return !Array.isArray(p) || p.length!==s.length || p.some((id,i)=>!id ? candidatesOf(s[i]).length>0 && !isFixed(s[i]) : !vById(id));
+    });
+    if(bad.length){ drawDays(bad); changed = true; }
+  }
+  if(changed) markDirty();
+}
+function rerollSlot(k, i){
+  const s = data.slots[k][i]; if(isFixed(s)) return toast('この枠は種目が固定です');
+  const cur = data.plan.picks[k][i];
+  const week = idsInDays(data.plan.picks, DAYS.map(d=>d.k)), day = new Set(data.plan.picks[k]), last = lastWeekIds();
+  const c = data.videos.filter(v=>v.part===s && usable(v) && v.id!==cur);
+  const tiers = [ c.filter(v=>!week.has(v.id)&&!last.has(v.id)), c.filter(v=>!week.has(v.id)), c.filter(v=>!day.has(v.id)), c ];
+  const t = tiers.find(x=>x.length);
+  if(!t) return toast(partLabel(s)+'のほかの候補がありません（「動画と切り取り」で増やせます）');
+  const n = t[Math.floor(Math.random()*t.length)];
+  data.plan.picks[k][i] = n.id; markDirty();
+  toast(`「${n.name}」に引き直しました`);
+  return n;
+}
+function unsetCount(){ return data.videos.filter(v=>v.part && !v.cutSet).length; }
+function checkCount(){ return data.videos.filter(v=>v.needCheck).length; }
+function fmtMD(s){ const [y,m,d]=s.split('-'); return (+m)+'/'+(+d); }
+
 /* ================= 保存(スプレッドシート) ================= */
 function setStatus(kind, text){
   const el=$('saveStatus'); el.className=kind; $('saveText').textContent=text;
@@ -378,7 +508,7 @@ async function saveNow(){
     const res = await apiPost({key:KEY, baseRev:rev, data:snapshot});
     if(res.conflict){
       // 別の画面で先に保存されていた → 最新を読み込み直す
-      data = res.data || data; rev = res.rev;
+      data = res.data ? normalize(res.data) : data; rev = res.rev;
       lsDel(LS_BACKUP);
       renderAll();
       setStatus('bad','別の画面で変更されていたので読み込み直しました。もう一度操作してください');
@@ -434,8 +564,21 @@ async function boot(){
 }
 function normalize(d){
   const base = JSON.parse(JSON.stringify(DEFAULT_DATA));
-  return { version:1, videos: Array.isArray(d.videos)?d.videos:base.videos,
-    menus: Object.assign({mon:[],wed:[],fri:[]}, d.menus||{}),
+  const videos = Array.isArray(d.videos)?d.videos:base.videos;
+  const menus = Object.assign({mon:[],wed:[],fri:[]}, d.menus||{});
+  if(!d.version || d.version < 2){
+    // 第1版からの切り替え：今までの7種目に部位をつけ、使ってきた動画は「設定済み」にする
+    videos.forEach(v=>{ if(!v.part && ORIGINAL_PARTS[v.id]) v.part = ORIGINAL_PARTS[v.id]; if(v.cutSet==null) v.cutSet = true; });
+  }
+  let slots = d.slots;
+  if(!slots){
+    // 今の曜日メニュー(種目の並び)を部位の枠に変換。部位のない動画はその動画で固定の枠にする
+    slots = {};
+    DAYS.forEach(day=>{ slots[day.k] = (menus[day.k]||[]).map(id=>{ const v=videos.find(x=>x.id===id); return v ? (v.part || 'v:'+id) : null; }).filter(Boolean); });
+  }
+  DAYS.forEach(day=>{ if(!Array.isArray(slots[day.k])) slots[day.k]=[]; });
+  return { version:2, videos, menus, slots,
+    plan: d.plan||null, history: Array.isArray(d.history)?d.history:[],
     done: Array.isArray(d.done)?d.done:[], durations: d.durations||{} };
 }
 function showSetup(msg){
@@ -492,9 +635,24 @@ function renderDays(){
     + `<span class="muted" style="margin-left:8px">${data.done.includes(todayStr())?'今日は記録済みです ✓':''}</span>`;
   $('dayBtns').querySelectorAll('button').forEach(b=>b.onclick=()=>selectDay(b.dataset.day));
 }
+let qSlot = [];   // queue[i] が曜日メニューの何番目の枠か
+function buildQueue(k){
+  const picks = (data.plan && data.plan.picks[k]) || [];
+  queue = []; qSlot = [];
+  picks.forEach((id,i)=>{ const v=vById(id); if(v){ queue.push(v); qSlot.push(i); } });
+}
+function renderWeekInfo(){
+  const wk = data.plan ? data.plan.week : weekKey();
+  const end = new Date(wk+'T12:00:00'); end.setDate(end.getDate()+6);
+  let h = `今週（${fmtMD(wk)}〜${end.getMonth()+1}/${end.getDate()}）の種目です。来週の月曜に自動で入れ替わります。`;
+  const u = unsetCount(), c = checkCount();
+  if(u) h += `<br><b style="color:var(--accent)">「ここから・ここまで」が未設定の種目が${u}つあります。</b>設定するまで入れ替えには出ません（「動画と切り取り」タブ）。`;
+  if(c) h += `<br><b style="color:var(--warn)">再生できなかった「要確認」の種目が${c}つあります。</b>`;
+  $('weekInfo').innerHTML = h;
+}
 function selectDay(k){
-  curDay = k; renderDays();
-  queue = (data.menus[k]||[]).map(vById).filter(Boolean);
+  curDay = k; ensureWeekPlan(); renderDays(); renderWeekInfo();
+  buildQueue(k);
   qi = 0; finished = false; playing = false; clearInterval(tick);
   if(player && player.stopVideo) try{player.stopVideo();}catch(e){}
   $('ovError').hidden = true; $('ovDone').hidden = true; $('ovStart').hidden = false;
@@ -506,7 +664,15 @@ function selectDay(k){
   renderQueue(); renderNow();
 }
 function renderQueue(){
-  $('queue').innerHTML = queue.map((v,i)=>`<li class="${finished||i<qi?'done':''} ${!finished&&i===qi&&(playing||$('ovStart').hidden)?'current':''}"><span>${i+1}. ${esc(v.name)}</span><span class="len">${fmt(clipLen(v))}</span></li>`).join('') || '<li class="muted">種目がありません</li>';
+  const before = !$('ovStart').hidden; // スタート前だけ「引き直す」を出す
+  $('queue').innerHTML = queue.map((v,i)=>{
+    const s = (data.slots[curDay]||[])[qSlot[i]];
+    const rr = before && !isFixed(s) ? `<button class="rr" data-rr="${i}" title="同じ部位の別の種目にする">引き直す</button>` : '';
+    return `<li class="${finished||i<qi?'done':''} ${!finished&&i===qi&&(playing||$('ovStart').hidden)?'current':''}"><span class="nm"><span class="pt">${esc(slotLabel(s))}</span>${i+1}. ${esc(v.name)}</span><span class="len">${fmt(clipLen(v))}</span>${rr}</li>`;
+  }).join('') || '<li class="muted">種目がありません</li>';
+  $('queue').querySelectorAll('[data-rr]').forEach(b=>b.onclick=()=>{
+    const i=+b.dataset.rr; if(rerollSlot(curDay, qSlot[i])) selectDay(curDay);
+  });
   $('queueCount').textContent = queue.length ? `${Math.min(qi+ (finished?1:0), queue.length)}/${queue.length} 済` : '';
 }
 function curLeft(){
@@ -586,8 +752,26 @@ function finishAll(auto){
   else $('doneMsg').textContent='今日はもう記録済みです。プロテインを忘れずに。';
   renderNow(); renderQueue(); renderDays();
 }
+/* 再生できない動画に当たったら、同じ部位の別の種目に自動で差し替える */
+function trySubstitute(){
+  const v = queue[qi], si = qSlot[qi], s = (data.slots[curDay]||[])[si];
+  if(!v || isFixed(s) || !s) return false;
+  if(!v.needCheck){ v.needCheck = true; markDirty(); }
+  const today = new Set(queue.map(x=>x.id)), week = idsInDays(data.plan.picks, DAYS.map(d=>d.k));
+  const c = data.videos.filter(x=>x.part===s && usable(x) && !today.has(x.id));
+  const pick = c.find(x=>!week.has(x.id)) || c[0];
+  if(!pick) return false;
+  data.plan.picks[curDay][si] = pick.id; queue[qi] = pick; markDirty();
+  toast(`「${v.name}」が再生できなかったので「${pick.name}」に差し替えました`);
+  renderWeekInfo();
+  loadCurrent();
+  return true;
+}
+let lastErrAt = 0;
 function showPlayError(){
   const v = queue[qi]; if(!v) return;
+  if(Date.now()-lastErrAt < 300) return; lastErrAt = Date.now(); // 同じエラーが続けて来たとき用
+  if(trySubstitute()) return;
   playing = false; clearInterval(tick);
   $('ytLink').href = `https://www.youtube.com/watch?v=${v.yt}&t=${Math.floor(v.start||0)}s`;
   $('ovError').hidden = false;
@@ -608,11 +792,28 @@ $('againBtn').onclick = ()=>{ selectDay(curDay); };
 let cutId = null;
 function renderCut(){
   if(!cutId || !vById(cutId)) cutId = data.videos[0] && data.videos[0].id;
-  $('vlist').innerHTML = data.videos.map(v=>`<li><button data-id="${v.id}" aria-pressed="${v.id===cutId}"><span>${esc(v.name)}</span><small>${fmt(v.start)}〜${v.end!=null?fmt(v.end):'最後'}</small></button></li>`).join('');
+  const item = v=>`<li><button data-id="${v.id}" aria-pressed="${v.id===cutId}"><span>${esc(v.name)}${v.part&&!v.cutSet?'<span class="badge unset">未設定</span>':''}${v.needCheck?'<span class="badge check">要確認</span>':''}</span><small>${fmt(v.start)}〜${v.end!=null?fmt(v.end):'最後'}</small></button></li>`;
+  let html = '';
+  [...PARTS, {k:null,l:'部位なし'}].forEach(p=>{
+    const list = data.videos.filter(v=>(v.part||null)===p.k);
+    if(!list.length) return;
+    const goal = p.k ? `（${list.filter(usable).length}/${PART_GOAL[p.k]}種目 使用中）` : '（入れ替えに出ません）';
+    html += `<li class="vgroup">${p.l} ${goal}</li>` + list.map(item).join('');
+  });
+  $('vlist').innerHTML = html;
   $('vlist').querySelectorAll('button').forEach(b=>b.onclick=()=>{ cutId=b.dataset.id; renderCut(); loadCut(); });
+  renderSuggest();
+  const partOpts = '<option value="">部位なし</option>'+PARTS.map(p=>`<option value="${p.k}">${p.l}</option>`).join('');
+  if(!$('addPart').options.length){ $('addPart').innerHTML = '<option value="" disabled selected>部位を選ぶ</option>'+PARTS.map(p=>`<option value="${p.k}">${p.l}</option>`).join(''); }
   const v = vById(cutId);
   $('delVideoBtn').disabled = !v;
   if(!v){ $('cutTitle').value=''; $('cutTitle').placeholder='動画がありません'; return; }
+  $('cutPart').innerHTML = partOpts; $('cutPart').value = v.part||'';
+  $('cutState').innerHTML = !v.part ? '<span class="muted">部位を決めると入れ替えの候補になります</span>'
+    : v.cutSet ? '<span style="color:var(--ok);font-weight:700">✓ 設定完了（入れ替えに出ます）</span>'
+    : '<span style="color:var(--accent);font-weight:700">未設定（「ここまで」を押すか「設定完了」を押すと入れ替えに出ます）</span>';
+  $('cutOkBtn').hidden = !(v.part && !v.cutSet);
+  $('cutCheck').hidden = !v.needCheck;
   if(document.activeElement!==$('cutTitle')) $('cutTitle').value = v.name;
   $('startVal').textContent = fmt(v.start);
   $('endVal').textContent = v.end!=null ? fmt(v.end) : '最後まで';
@@ -644,7 +845,30 @@ function updateCut(fn){
   markDirty(); renderCut();
 }
 $('setStart').onclick = ()=>{ const p=nowPos(); if(p==null) return toast('先に動画を再生してください'); updateCut(v=>{ v.start=p; if(v.end!=null&&v.end<=p) v.end=null; }); toast('「ここから」を '+fmt(p)+' にしました'); };
-$('setEnd').onclick = ()=>{ const p=nowPos(); if(p==null) return toast('先に動画を再生してください'); const v=vById(cutId); if(p<=v.start) return toast('「ここから」より後の位置で押してください'); updateCut(v=>v.end=p); toast('「ここまで」を '+fmt(p)+' にしました'); };
+$('setEnd').onclick = ()=>{ const p=nowPos(); if(p==null) return toast('先に動画を再生してください'); const v=vById(cutId); if(p<=v.start) return toast('「ここから」より後の位置で押してください'); const first=!v.cutSet; updateCut(v=>{ v.end=p; v.cutSet=true; }); toast('「ここまで」を '+fmt(p)+' にしました'+(first&&v.part?'。来週から入れ替えに出ます':'')); };
+$('cutOkBtn').onclick = ()=>{ updateCut(v=>v.cutSet=true); toast('設定完了にしました。入れ替えに出ます'); };
+$('cutPart').onchange = ()=>{
+  const v=vById(cutId); if(!v) return; const p=$('cutPart').value||null;
+  if(!p && DAYS.some(d=>(data.plan&&data.plan.picks[d.k]||[]).includes(v.id))) toast('今週のメニューに入っている分は、組み直したときに外れます');
+  v.part = p; markDirty(); renderCut(); toast(p?'部位を「'+partLabel(p)+'」にしました':'部位なしにしました（入れ替えに出ません）');
+};
+$('clearCheckBtn').onclick = ()=>{ updateCut(v=>v.needCheck=false); toast('「要確認」を外しました'); };
+function renderSuggest(){
+  const have = new Set(data.videos.map(v=>v.yt));
+  $('suggList').innerHTML = PARTS.map(p=>{
+    const list = SUGGEST.filter(s=>s.part===p.k); if(!list.length) return '';
+    return `<div class="vgroup">${p.l}</div><ul class="sugg">${list.map(s=>`<li><span class="t">${esc(s.name)}<small>${esc(s.by)}・${s.len}</small></span>
+      <a href="https://www.youtube.com/watch?v=${s.yt}" target="_blank" rel="noopener">見る</a>
+      ${have.has(s.yt)?'<span class="muted" style="font-size:12px">登録済み</span>':`<button class="btn" style="padding:4px 10px" data-sg="${s.yt}">登録</button>`}</li>`).join('')}</ul>`;
+  }).join('');
+  $('suggList').querySelectorAll('[data-sg]').forEach(b=>b.onclick=()=>{
+    const s = SUGGEST.find(x=>x.yt===b.dataset.sg); if(!s || data.videos.some(v=>v.yt===s.yt)) return;
+    const id = 'v'+Date.now().toString(36);
+    data.videos.push({id, name:s.name, yt:s.yt, start:0, end:null, part:s.part, cutSet:false});
+    cutId = id; markDirty(); renderCut(); loadCut();
+    toast(`「${s.name}」を登録しました。右で「ここから・ここまで」を決めてください`);
+  });
+}
 $('renameBtn').onclick = ()=>{
   const v = vById(cutId); if(!v) return;
   const n = $('cutTitle').value.trim();
@@ -667,46 +891,66 @@ $('addBtn').onclick = ()=>{
   const name = $('addName').value.trim(), yt = parseYtId($('addUrl').value);
   if(!name){ $('addMsg').textContent='種目名を入れてください'; return; }
   if(!yt){ $('addMsg').textContent='YouTubeのURLとして読み取れませんでした'; return; }
+  const part = $('addPart').value;
+  if(!part){ $('addMsg').textContent='部位を選んでください'; return; }
   const id = 'v'+Date.now().toString(36);
-  data.videos.push({id, name, yt, start:0, end:null});
+  data.videos.push({id, name, yt, start:0, end:null, part, cutSet:false});
   $('addName').value=''; $('addUrl').value=''; $('addMsg').textContent='追加しました。「ここから」「ここまで」を決めてください。';
   cutId = id; markDirty(); renderCut(); loadCut();
 };
 $('delVideoBtn').onclick = async ()=>{
   const v = vById(cutId); if(!v) return;
-  const used = DAYS.filter(d=>(data.menus[d.k]||[]).includes(v.id)).map(d=>d.l);
-  const ok = await confirmBox(`「${v.name}」を削除しますか？`, used.length ? `${used.join('・')}のメニューからも外れます。` : '切り取り位置も消えます。');
+  const used = DAYS.filter(d=>(data.plan&&data.plan.picks[d.k]||[]).includes(v.id)).map(d=>d.l);
+  const ok = await confirmBox(`「${v.name}」を削除しますか？`, used.length ? `今週の${used.join('・')}のメニューに入っているので、その曜日の今週の種目を引き直します。` : '切り取り位置も消えます。');
   if(!ok) return;
   data.videos = data.videos.filter(x=>x.id!==v.id);
-  DAYS.forEach(d=>data.menus[d.k]=(data.menus[d.k]||[]).filter(x=>x!==v.id));
+  DAYS.forEach(d=>{
+    data.menus[d.k]=(data.menus[d.k]||[]).filter(x=>x!==v.id);
+    data.slots[d.k]=(data.slots[d.k]||[]).filter(s=>s!=='v:'+v.id);
+  });
+  ensureWeekPlan();
   cutId = null; markDirty(); renderCut(); loadCut(); toast('削除しました');
 };
 
 /* ================= 曜日メニュー ================= */
 function renderMenu(){
+  ensureWeekPlan();
+  const opts = PARTS.map(p=>`<option value="${p.k}">${p.l}（毎週入れ替え）</option>`).join('')
+    + '<optgroup label="入れ替えずに固定する">' + data.videos.map(v=>`<option value="v:${v.id}">固定：${esc(v.name)}</option>`).join('') + '</optgroup>';
   $('menuGrid').innerHTML = DAYS.map(d=>{
-    const list = (data.menus[d.k]||[]).map(vById).filter(Boolean);
-    const total = list.reduce((a,v)=>a+(clipLen(v)||0),0);
-    return `<div class="panel"><h2>${d.l} <span class="muted" style="font-weight:400;font-size:13px">${list.length}種目・約${fmt(total)}</span></h2>
-      <ul class="mlist">${list.map((v,i)=>`<li><span class="n">${i+1}</span><span class="t">${esc(v.name)}</span>
+    const slots = data.slots[d.k]||[], picks = (data.plan&&data.plan.picks[d.k])||[];
+    const total = picks.reduce((a,id)=>{ const v=vById(id); return a+(v?clipLen(v)||0:0); },0);
+    return `<div class="panel"><h2>${d.l} <span class="muted" style="font-weight:400;font-size:13px">${slots.length}枠・今週は約${fmt(total)}</span></h2>
+      <ul class="mlist">${slots.map((s,i)=>{ const v=vById(picks[i]); return `<li><span class="n">${i+1}</span><span class="t"><b>${esc(slotLabel(s))}</b><br><span class="muted" style="font-size:12px">今週：${v?esc(v.name):'候補なし'}</span></span>
+        ${isFixed(s)?'':`<button class="icon" aria-label="引き直す" title="今週の種目を引き直す" data-rr="${d.k}:${i}">🎲</button>`}
         <button class="icon" aria-label="上へ" data-mv="${d.k}:${i}:-1" ${i===0?'disabled':''}>↑</button>
-        <button class="icon" aria-label="下へ" data-mv="${d.k}:${i}:1" ${i===list.length-1?'disabled':''}>↓</button>
-        <button class="icon" aria-label="外す" data-rm="${d.k}:${i}">✕</button></li>`).join('') || '<li class="muted">まだありません</li>'}</ul>
-      <div class="form-row"><select id="sel-${d.k}">${data.videos.map(v=>`<option value="${v.id}">${esc(v.name)}</option>`).join('')}</select>
-      <button class="btn" data-add="${d.k}">追加</button></div></div>`;
+        <button class="icon" aria-label="下へ" data-mv="${d.k}:${i}:1" ${i===slots.length-1?'disabled':''}>↓</button>
+        <button class="icon" aria-label="外す" data-rm="${d.k}:${i}">✕</button></li>`; }).join('') || '<li class="muted">まだありません</li>'}</ul>
+      <div class="form-row"><select id="sel-${d.k}">${opts}</select>
+      <button class="btn" data-add="${d.k}">枠を追加</button></div></div>`;
   }).join('');
+  const afterSlotChange = k=>{ drawDays([k]); markDirty(); renderMenu(); toast(DAYS.find(d=>d.k===k).l+'の今週の種目を引き直しました'); };
   $('menuGrid').querySelectorAll('[data-mv]').forEach(b=>b.onclick=()=>{
-    const [k,i,d]=b.dataset.mv.split(':'); const a=data.menus[k], x=+i, y=x+(+d);
-    [a[x],a[y]]=[a[y],a[x]]; markDirty(); renderMenu();
+    // 並べ替えは種目も一緒に動かす(引き直さない)
+    const [k,i,d]=b.dataset.mv.split(':'); const a=data.slots[k], p=data.plan.picks[k], x=+i, y=x+(+d);
+    [a[x],a[y]]=[a[y],a[x]]; [p[x],p[y]]=[p[y],p[x]]; markDirty(); renderMenu();
   });
   $('menuGrid').querySelectorAll('[data-rm]').forEach(b=>b.onclick=()=>{
-    const [k,i]=b.dataset.rm.split(':'); data.menus[k].splice(+i,1); markDirty(); renderMenu();
+    const [k,i]=b.dataset.rm.split(':'); data.slots[k].splice(+i,1); data.plan.picks[k].splice(+i,1); markDirty(); renderMenu();
   });
   $('menuGrid').querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{
-    const k=b.dataset.add, id=$('sel-'+k).value; if(!id) return;
-    (data.menus[k]=data.menus[k]||[]).push(id); markDirty(); renderMenu();
+    const k=b.dataset.add, s=$('sel-'+k).value; if(!s) return;
+    (data.slots[k]=data.slots[k]||[]).push(s); afterSlotChange(k);
+  });
+  $('menuGrid').querySelectorAll('[data-rr]').forEach(b=>b.onclick=()=>{
+    const [k,i]=b.dataset.rr.split(':'); if(rerollSlot(k,+i)) renderMenu();
   });
 }
+$('redrawWeekBtn').onclick = async ()=>{
+  const ok = await confirmBox('今週の種目を全部組み直しますか？','月・水・金の今週の種目を、くじ引きでもう一度決め直します。（先週と同じ種目はなるべく避けます）');
+  if(!ok) return;
+  drawDays(DAYS.map(d=>d.k)); markDirty(); renderMenu(); toast('今週の種目を組み直しました');
+};
 
 /* ================= 記録カレンダー ================= */
 let calY, calM;
