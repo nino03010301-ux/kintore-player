@@ -324,27 +324,12 @@ const DAYS = [{k:'mon',l:'月曜',w:1},{k:'wed',l:'水曜',w:3},{k:'fri',l:'金�
 /* 部位。曜日メニューは「部位の枠」の並びで持ち、毎週その部位の候補からくじ引きで種目を決める */
 const PARTS = [{k:'leg',l:'脚'},{k:'chest',l:'胸・腕'},{k:'back',l:'背中'},{k:'glute',l:'お尻'},{k:'abs',l:'お腹'}];
 const ORIGINAL_PARTS = {v1:'leg',v2:'leg',v3:'chest',v4:'back',v5:'glute',v6:'abs',v7:'abs'};
-/* Claudeが探したおすすめ候補(日本語・道具なし・埋め込み再生できることを確認済み 2026-11-13) */
-const SUGGEST = [
-  {part:'leg',   name:'ワイドスクワット',         yt:'I5biGSH9DxE', by:'CALISLIFE自重トレ', len:'2:04'},
-  {part:'leg',   name:'ブルガリアンスクワット',   yt:'AqKiDWd5WDw', by:'MELOS', len:'4:20'},
-  {part:'leg',   name:'サイドランジ',             yt:'pXrjm2rqytw', by:'MELOS', len:'2:02'},
-  {part:'leg',   name:'フロントランジ',           yt:'ZRfEIEeWh0I', by:'MELOS', len:'2:00'},
-  {part:'leg',   name:'カーフレイズ(ふくらはぎ)', yt:'8EeE5QYHg_Q', by:'CALISLIFE自重トレ', len:'5:15'},
-  {part:'chest', name:'膝つき腕立て伏せ',         yt:'YwtqHZqFDTc', by:'MELOS', len:'2:39'},
-  {part:'chest', name:'ショルダータッププランク', yt:'BEdL5Nkec5k', by:'MELOS', len:'2:22'},
-  {part:'back',  name:'リバーススノーエンジェル', yt:'GMj-5ZOdQ4E', by:'Smartlog', len:'1:24'},
-  {part:'back',  name:'バックエクステンション',   yt:'YvQZ7CAIFlA', by:'MELOS', len:'3:10'},
-  {part:'back',  name:'うつ伏せ背中トレ',         yt:'fOPs7a6VIDg', by:'Yuzu pilates', len:'4:16'},
-  {part:'glute', name:'バックキック',             yt:'d94NIixNv2M', by:'MELOS', len:'3:58'},
-  {part:'glute', name:'ワンレッグヒップリフト',   yt:'Rk5dK46HtbU', by:'MELOS', len:'3:04'},
-  {part:'glute', name:'ファイヤーハイドラント',   yt:'NyEz6ZlRxLY', by:'MELOS', len:'4:00'},
-  {part:'abs',   name:'レッグレイズ',             yt:'y_sZA8ixCBw', by:'MELOS', len:'2:10'},
-  {part:'abs',   name:'プランク',                 yt:'UgkU2S8VUX4', by:'MELOS', len:'2:20'},
-  {part:'abs',   name:'ロシアンツイスト',         yt:'FVQ8KN2g-ig', by:'MELOS', len:'3:07'},
-  {part:'abs',   name:'バイシクルクランチ',       yt:'kXsKYJcXxpA', by:'MELOS', len:'1:45'},
-  {part:'abs',   name:'リバースクランチ',         yt:'EhX4ZtBBh34', by:'MELOS', len:'3:41'}
-];
+/* おすすめ候補。本体は suggest.json(毎月1日にClaudeが部位ごとに1本足す)。読めなかったときはこの控えを使う */
+let SUGGEST = [{"part": "leg", "name": "脚トレ(BPM)", "yt": "TliT7JOc0l0", "by": "鈴木達也", "len": "4:16", "added": "2026-11-13"}, {"part": "leg", "name": "下半身全体の脚トレ(BPM)", "yt": "dG-kANizANI", "by": "鈴木達也", "len": "4:04", "added": "2026-11-13"}, {"part": "leg", "name": "スプリットスクワット", "yt": "YIwOrxgqBvk", "by": "MELOS", "len": "4:41", "added": "2026-11-13"}, {"part": "leg", "name": "ワイドスクワット", "yt": "zbg6S0HwETM", "by": "MELOS", "len": "2:28", "added": "2026-11-13"}, {"part": "leg", "name": "ブルガリアンスクワット", "yt": "AqKiDWd5WDw", "by": "MELOS", "len": "4:20"}, {"part": "leg", "name": "サイドランジ", "yt": "pXrjm2rqytw", "by": "MELOS", "len": "2:02"}, {"part": "leg", "name": "フロントランジ", "yt": "ZRfEIEeWh0I", "by": "MELOS", "len": "2:00"}, {"part": "leg", "name": "カーフレイズ(ふくらはぎ)", "yt": "936AZbyQqEg", "by": "MELOS", "len": "2:41", "added": "2026-11-13"}, {"part": "chest", "name": "胸の腕立て伏せ(BPM)", "yt": "JSqARqeD2NE", "by": "鈴木達也", "len": "6:29", "added": "2026-11-13"}, {"part": "chest", "name": "二の腕トレ(BPM)", "yt": "WwHxI0rhgE0", "by": "鈴木達也", "len": "4:14", "added": "2026-11-13"}, {"part": "chest", "name": "膝つき腕立て伏せ", "yt": "YwtqHZqFDTc", "by": "MELOS", "len": "2:39"}, {"part": "chest", "name": "時短の腕と胸トレ", "yt": "TMINEwWfmo8", "by": "MELOS", "len": "1:36", "added": "2026-11-13"}, {"part": "chest", "name": "ショルダータッププランク", "yt": "BEdL5Nkec5k", "by": "MELOS", "len": "2:22"}, {"part": "back", "name": "後ろ姿を作る背中トレ(BPM)", "yt": "wASoZxlw2q4", "by": "鈴木達也", "len": "3:31", "added": "2026-11-13"}, {"part": "back", "name": "背筋トレ(BPM)", "yt": "iwDiuKV3u7k", "by": "鈴木達也", "len": "4:35", "added": "2026-11-13"}, {"part": "back", "name": "背筋4種目2分", "yt": "XH7_0UH9DfU", "by": "MELOS", "len": "2:58", "added": "2026-11-13"}, {"part": "back", "name": "バックエクステンション", "yt": "YvQZ7CAIFlA", "by": "MELOS", "len": "3:10"}, {"part": "back", "name": "猫背に効く背中トレ2分", "yt": "R7Enjq6Bpz4", "by": "MELOS", "len": "1:54", "added": "2026-11-13"}, {"part": "glute", "name": "お尻トレ(BPM)", "yt": "i4sZkRL-_Uk", "by": "鈴木達也", "len": "4:29", "added": "2026-11-13"}, {"part": "glute", "name": "体幹とお尻トレ(BPM)", "yt": "g-NY7tB06_0", "by": "鈴木達也", "len": "4:47", "added": "2026-11-13"}, {"part": "glute", "name": "ドンキーキック", "yt": "Q8jPbOAmFqI", "by": "MELOS", "len": "2:37", "added": "2026-11-13"}, {"part": "glute", "name": "ワンレッグヒップリフト", "yt": "Rk5dK46HtbU", "by": "MELOS", "len": "3:04"}, {"part": "glute", "name": "ファイヤーハイドラント", "yt": "NyEz6ZlRxLY", "by": "MELOS", "len": "4:00"}, {"part": "glute", "name": "立ったままお尻トレ", "yt": "gX_F6fa0Rtk", "by": "MELOS", "len": "2:51", "added": "2026-11-13"}, {"part": "abs", "name": "へこます腹筋(BPM)", "yt": "QPglX9uPaG4", "by": "鈴木達也", "len": "3:20", "added": "2026-11-13"}, {"part": "abs", "name": "腹筋トレ(BPM)", "yt": "OpEXuNXjJ0g", "by": "鈴木達也", "len": "4:40", "added": "2026-11-13"}, {"part": "abs", "name": "レッグレイズ", "yt": "y_sZA8ixCBw", "by": "MELOS", "len": "2:10"}, {"part": "abs", "name": "プランク", "yt": "UgkU2S8VUX4", "by": "MELOS", "len": "2:20"}, {"part": "abs", "name": "ロシアンツイスト", "yt": "FVQ8KN2g-ig", "by": "MELOS", "len": "3:07"}, {"part": "abs", "name": "バイシクルクランチ", "yt": "kXsKYJcXxpA", "by": "MELOS", "len": "1:45"}, {"part": "abs", "name": "リバースクランチ", "yt": "EhX4ZtBBh34", "by": "MELOS", "len": "3:41"}];
+fetch('suggest.json?t='+Date.now(), {cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{
+  if(j && Array.isArray(j.items) && j.items.length){ SUGGEST = j.items; if(data && !$('tab-cut').hidden) renderSuggest(); }
+}).catch(()=>{});
+function isNew(sg){ return sg.added && (Date.now()-new Date(sg.added+'T00:00:00'))/86400000 <= 35; }
 const PART_GOAL = {leg:6, chest:3, back:3, glute:3, abs:6}; // 部位ごとの候補数の目安
 
 const DEFAULT_DATA = {
@@ -410,10 +395,19 @@ function slotLabel(s){ if(isFixed(s)){ const v=vById(s.slice(2)); return '固定
 function usable(v){ return v && v.part && v.cutSet && !v.needCheck; }  // 入れ替えに出してよい種目
 function weekKey(d){ d=new Date(d||Date.now()); d.setHours(12,0,0,0); d.setDate(d.getDate()-((d.getDay()+6)%7)); return todayStr(d); }
 function shuffle(a){ a=a.slice(); for(let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; }
-function lastWeekIds(){
-  const h = (data.history||[]).find(x=>x && x.week!==(data.plan&&data.plan.week));
-  const s = new Set(); if(h&&h.picks) Object.values(h.picks).forEach(a=>(a||[]).forEach(id=>id&&s.add(id))); return s;
+/* 同じ種目かどうか：同じ動画、または名前から「１セット」「(BPM)」などを除くと同じ名前 */
+function exKey(name){
+  return String(name||'').normalize('NFKC').replace(/\s+/g,'')
+    .replace(/[(（【\[［][^)）】\]］]*[)）】\]］]/g,'')
+    .replace(/[0-9]+(セット|set|回|秒|分|本)/gi,'').replace(/セット/g,'').toLowerCase();
 }
+function sameEx(a,b){ return !!a && !!b && (a.id===b.id || a.yt===b.yt || exKey(a.name)===exKey(b.name)); }
+function clashAny(v, list){ return list.some(x=>x && sameEx(v,x)); }
+function lastWeekVideos(){
+  const h = (data.history||[]).find(x=>x && x.week!==(data.plan&&data.plan.week));
+  const out=[]; if(h&&h.picks) Object.values(h.picks).forEach(a=>(a||[]).forEach(id=>{ const v=vById(id); if(v) out.push(v); })); return out;
+}
+function videosInDays(picks, days, skip){ const out=[]; days.forEach(k=>(picks[k]||[]).forEach((id,i)=>{ if(skip && skip[0]===k && skip[1]===i) return; const v=vById(id); if(v) out.push(v); })); return out; }
 function idsInDays(picks, days){ const s=new Set(); days.forEach(k=>(picks[k]||[]).forEach(id=>id&&s.add(id))); return s; }
 function candidatesOf(part){
   let c = data.videos.filter(v=>v.part===part && usable(v));
@@ -421,22 +415,36 @@ function candidatesOf(part){
   if(!c.length) c = data.videos.filter(v=>v.part===part);
   return c;
 }
+/* 1枠ぶんの種目を選ぶ。同じ日に同じ種目は絶対に入れない。
+   そのうえで「今週ほかで使った」「先週使った」種目はなるべく避ける */
+function pickFor(k, i, opts){
+  opts = opts || {};
+  const s = data.slots[k][i]; if(!s || isFixed(s)) return null;
+  const dayOthers = videosInDays(data.plan.picks, [k], [k,i]);
+  const week = videosInDays(data.plan.picks, DAYS.map(d=>d.k), [k,i]);
+  const last = opts.last || lastWeekVideos();
+  let c = (opts.strict ? data.videos.filter(v=>v.part===s && usable(v)) : candidatesOf(s))
+          .filter(v=>v.id!==opts.exclude && !clashAny(v, dayOthers));
+  if(!c.length) return null;
+  const score = v=>(clashAny(v,week)?2:0)+(clashAny(v,last)?1:0);
+  const best = Math.min(...c.map(score));
+  c = c.filter(v=>score(v)===best);
+  return c[Math.floor(Math.random()*c.length)];
+}
 /* 指定した曜日の種目をくじ引きで決める(ほかの曜日の分はそのまま) */
 function drawDays(days){
-  const picks = data.plan.picks;
-  const others = DAYS.map(d=>d.k).filter(k=>!days.includes(k));
-  const usedOther = idsInDays(picks, others), last = lastWeekIds();
+  const picks = data.plan.picks, last = lastWeekVideos();
   days.forEach(k=>{ picks[k] = (data.slots[k]||[]).map(s=>isFixed(s) && vById(s.slice(2)) ? s.slice(2) : null); });
-  PARTS.forEach(p=>{
-    const pos = []; days.forEach(k=>(data.slots[k]||[]).forEach((s,i)=>{ if(s===p.k) pos.push([k,i]); }));
-    if(!pos.length) return;
-    const c = candidatesOf(p.k);
-    // 先週も今週のほかの日も使っていない → 先週使った → 今週ほかの日で使った、の順に優先
-    const pool = [ ...shuffle(c.filter(v=>!usedOther.has(v.id)&&!last.has(v.id))),
-                   ...shuffle(c.filter(v=>!usedOther.has(v.id)&& last.has(v.id))),
-                   ...shuffle(c.filter(v=> usedOther.has(v.id))) ];
-    pos.forEach(([k,i],j)=>{ picks[k][i] = pool.length ? pool[j%pool.length].id : null; });
+  days.forEach(k=>{
+    shuffle((data.slots[k]||[]).map((s,i)=>i)).forEach(i=>{
+      if(isFixed(data.slots[k][i])) return;
+      const v = pickFor(k, i, {last}); picks[k][i] = v ? v.id : null;
+    });
   });
+}
+function dayHasDup(k){
+  const ps = data.plan.picks[k]||[], sl = data.slots[k]||[];
+  return ps.some((a,i)=>ps.some((b,j)=>j>i && a && b && !(isFixed(sl[i])&&isFixed(sl[j])) && sameEx(vById(a),vById(b))));
 }
 /* 今週の組み合わせを用意する。週が変わっていれば新しく引く。おかしな所があればその曜日だけ引き直す */
 function ensureWeekPlan(){
@@ -450,7 +458,9 @@ function ensureWeekPlan(){
   } else {
     const bad = DAYS.map(d=>d.k).filter(k=>{
       const p=data.plan.picks[k], s=data.slots[k]||[];
-      return !Array.isArray(p) || p.length!==s.length || p.some((id,i)=>!id ? candidatesOf(s[i]).length>0 && !isFixed(s[i]) : !vById(id));
+      if(!Array.isArray(p) || p.length!==s.length) return true;
+      if(p.some((id,i)=>id ? !vById(id) : (!isFixed(s[i]) && pickFor(k,i)))) return true;
+      return dayHasDup(k);
     });
     if(bad.length){ drawDays(bad); changed = true; }
   }
@@ -458,13 +468,8 @@ function ensureWeekPlan(){
 }
 function rerollSlot(k, i){
   const s = data.slots[k][i]; if(isFixed(s)) return toast('この枠は種目が固定です');
-  const cur = data.plan.picks[k][i];
-  const week = idsInDays(data.plan.picks, DAYS.map(d=>d.k)), day = new Set(data.plan.picks[k]), last = lastWeekIds();
-  const c = data.videos.filter(v=>v.part===s && usable(v) && v.id!==cur);
-  const tiers = [ c.filter(v=>!week.has(v.id)&&!last.has(v.id)), c.filter(v=>!week.has(v.id)), c.filter(v=>!day.has(v.id)), c ];
-  const t = tiers.find(x=>x.length);
-  if(!t) return toast(partLabel(s)+'のほかの候補がありません（「動画と切り取り」で増やせます）');
-  const n = t[Math.floor(Math.random()*t.length)];
+  const n = pickFor(k, i, {strict:true, exclude:data.plan.picks[k][i]});
+  if(!n) return toast(partLabel(s)+'のほかの候補がありません（同じ日の種目と重なるものは出しません）');
   data.plan.picks[k][i] = n.id; markDirty();
   toast(`「${n.name}」に引き直しました`);
   return n;
@@ -757,9 +762,7 @@ function trySubstitute(){
   const v = queue[qi], si = qSlot[qi], s = (data.slots[curDay]||[])[si];
   if(!v || isFixed(s) || !s) return false;
   if(!v.needCheck){ v.needCheck = true; markDirty(); }
-  const today = new Set(queue.map(x=>x.id)), week = idsInDays(data.plan.picks, DAYS.map(d=>d.k));
-  const c = data.videos.filter(x=>x.part===s && usable(x) && !today.has(x.id));
-  const pick = c.find(x=>!week.has(x.id)) || c[0];
+  const pick = pickFor(curDay, si, {strict:true, exclude:v.id});
   if(!pick) return false;
   data.plan.picks[curDay][si] = pick.id; queue[qi] = pick; markDirty();
   toast(`「${v.name}」が再生できなかったので「${pick.name}」に差し替えました`);
@@ -856,8 +859,8 @@ $('clearCheckBtn').onclick = ()=>{ updateCut(v=>v.needCheck=false); toast('「�
 function renderSuggest(){
   const have = new Set(data.videos.map(v=>v.yt));
   $('suggList').innerHTML = PARTS.map(p=>{
-    const list = SUGGEST.filter(s=>s.part===p.k); if(!list.length) return '';
-    return `<div class="vgroup">${p.l}</div><ul class="sugg">${list.map(s=>`<li><span class="t">${esc(s.name)}<small>${esc(s.by)}・${s.len}</small></span>
+    const list = SUGGEST.filter(s=>s.part===p.k).sort((a,b)=>(b.added||'').localeCompare(a.added||'')); if(!list.length) return '';
+    return `<div class="vgroup">${p.l}</div><ul class="sugg">${list.map(s=>`<li><span class="t">${esc(s.name)}${isNew(s)?'<span class="badge unset">新着</span>':''}<small>${esc(s.by)}・${s.len}</small></span>
       <a href="https://www.youtube.com/watch?v=${s.yt}" target="_blank" rel="noopener">見る</a>
       ${have.has(s.yt)?'<span class="muted" style="font-size:12px">登録済み</span>':`<button class="btn" style="padding:4px 10px" data-sg="${s.yt}">登録</button>`}</li>`).join('')}</ul>`;
   }).join('');
@@ -865,6 +868,8 @@ function renderSuggest(){
     const s = SUGGEST.find(x=>x.yt===b.dataset.sg); if(!s || data.videos.some(v=>v.yt===s.yt)) return;
     const id = 'v'+Date.now().toString(36);
     data.videos.push({id, name:s.name, yt:s.yt, start:0, end:null, part:s.part, cutSet:false});
+    const twin = data.videos.find(v=>v.id!==id && sameEx(v, vById(id)));
+    if(twin) setTimeout(()=>toast(`「${twin.name}」と同じ種目あつかいなので、同じ日には一緒に出ません`), 2800);
     cutId = id; markDirty(); renderCut(); loadCut();
     toast(`「${s.name}」を登録しました。右で「ここから・ここまで」を決めてください`);
   });
@@ -940,6 +945,8 @@ function renderMenu(){
   });
   $('menuGrid').querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{
     const k=b.dataset.add, s=$('sel-'+k).value; if(!s) return;
+    if(isFixed(s)){ const v=vById(s.slice(2)); const dup=(data.slots[k]||[]).filter(isFixed).map(x=>vById(x.slice(2))).find(x=>x && sameEx(v,x));
+      if(dup) return toast(`${DAYS.find(d=>d.k===k).l}にはもう「${dup.name}」が入っているので追加できません`); }
     (data.slots[k]=data.slots[k]||[]).push(s); afterSlotChange(k);
   });
   $('menuGrid').querySelectorAll('[data-rr]').forEach(b=>b.onclick=()=>{
