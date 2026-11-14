@@ -84,6 +84,7 @@
   .linkbtn{background:none;border:none;color:#7aa7ff;font-size:13px;padding:10px 0 0;cursor:pointer;text-decoration:underline}
   .basebox{display:none;margin-top:10px;background:#15181d;border-radius:12px;padding:12px}
   .basebox.show{display:block}
+  .sel{flex:1;min-width:0;background:#0f1114;border:1px solid var(--line);color:var(--text);border-radius:10px;padding:10px;font-size:16px}
   .ptcard{padding-bottom:10px}
   .pt-label{font-size:13px;color:var(--sub);margin-bottom:8px}
   .ptin{width:100%;background:#0f1114;border:1px solid var(--line);color:var(--text);border-radius:12px;padding:14px;font-size:22px;text-align:center;margin-bottom:10px}
@@ -155,11 +156,16 @@
       <div class="bar"><div class="fill f2" id="b2F"></div></div>
     </div>
     <div class="goal" id="goalLine">目標：プラチナ</div>
-    <button class="linkbtn" id="baseOpen">ゲームとずれたら：今のRP合計を入れ直す</button>
+    <button class="linkbtn" id="baseOpen">ゲームとずれたら：今のランクとRPを入れ直す</button>
     <div class="basebox" id="baseBox">
-      <div class="muted" id="baseMsg" style="margin-bottom:8px">ゲームのランク画面に出ている「今のRP合計」を入れてください。</div>
+      <div class="muted" id="baseMsg" style="margin-bottom:8px">ゲームのランク画面を見て、今のランクと「○○ / ○○」の左側の数字を入れてください。</div>
+      <div class="rankrow" style="margin-bottom:8px">
+        <label for="baseDiv">ランク</label>
+        <select id="baseDiv" class="sel" disabled></select>
+      </div>
       <div class="rankrow">
-        <input id="baseIn" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="例：3250" disabled>
+        <input id="baseIn" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="例：120" disabled>
+        <span class="muted" id="baseDen" style="white-space:nowrap">/ —</span>
         <button id="baseSave" class="btn" disabled>決定</button>
       </div>
       <button class="linkbtn" id="baseClose">閉じる</button>
@@ -252,6 +258,18 @@
     DIVS.push({ name: "マスター", tier: "マスター", ti: TIERS.length, start: rp, end: null, color: "#b07cff" });
   })();
   var PLAT_START = DIVS.filter(function(d){ return d.tier === "プラチナ"; })[0].start;
+  (function(){
+    var sel = document.getElementById("baseDiv");
+    DIVS.forEach(function(d, i){
+      var o = document.createElement("option");
+      o.value = String(i); o.textContent = d.name;
+      sel.appendChild(o);
+    });
+  })();
+  function updateDen(){
+    var d = DIVS[Number(document.getElementById("baseDiv").value) || 0];
+    document.getElementById("baseDen").textContent = d.end === null ? "RP" : "/ " + (d.end - d.start);
+  }
 
   function divOf(rp){
     for (var i = DIVS.length - 1; i >= 0; i--) if (rp >= DIVS[i].start) return DIVS[i];
@@ -359,6 +377,7 @@
     $("ptIn").disabled = !canRecord;
     $("bUndo").disabled = !ok || records.length === 0;
     $("baseIn").disabled = !ready;
+    $("baseDiv").disabled = !ready;
     $("baseSave").disabled = !ok;
   }
 
@@ -367,13 +386,13 @@
     var rp = currentRP();
     if (rp === null){
       $("rkName").textContent = "ランク未設定";
-      $("rkRp").textContent = "まず今のRP合計を入れてください";
+      $("rkRp").textContent = "まず今のランクとRPを入れてください";
       $("rkBadge").style.background = "#2c323b";
       $("rkBars").style.display = "none";
       $("goalLine").textContent = "目標：プラチナ";
       $("baseOpen").style.display = "none";
       $("baseBox").className = "basebox show";
-      $("baseMsg").textContent = "はじめに、ゲームのランク画面に出ている「今のRP合計」を入れてください。";
+      $("baseMsg").textContent = "はじめに、ゲームのランク画面を見て、今のランクと「○○ / ○○」の左側の数字を入れてください。";
       $("baseClose").style.display = "none";
       return;
     }
@@ -381,11 +400,12 @@
     $("rkName").textContent = d.name;
     $("rkName").style.color = d.color;
     $("rkBadge").style.background = d.color;
-    $("rkRp").textContent = fmt(rp) + " RP";
+    $("rkRp").textContent = d.end === null ? fmt(rp - d.start) + " RP" : fmt(rp - d.start) + " / " + fmt(d.end - d.start);
     $("rkBars").style.display = "block";
     $("baseOpen").style.display = "inline-block";
     $("baseClose").style.display = "inline-block";
-    $("baseMsg").textContent = "ゲームのランク画面に出ている「今のRP合計」を入れてください。ここから先はこの数字をもとに計算します。";
+    $("baseMsg").textContent = "ゲームのランク画面を見て、今のランクと「○○ / ○○」の左側の数字を入れてください。ここから先はこの数字をもとに計算します。";
+    if (!$("baseBox").classList.contains("show")) { $("baseDiv").value = String(DIVS.indexOf(d)); updateDen(); }
 
     if (d.end === null){
       $("b1L").textContent = "マスター到達！"; $("b1R").textContent = "";
@@ -569,7 +589,7 @@
         var afterDiv = divOf(currentRP()).name;
         if (afterDiv !== beforeDiv){
           var up = currentRP() > 0 && DIVS.map(function(d){ return d.name; }).indexOf(afterDiv) > DIVS.map(function(d){ return d.name; }).indexOf(beforeDiv);
-          showBanner(up ? "🎉 " + afterDiv + " に上がりました！" : afterDiv + " に下がりました。降格保護がある場合はゲームと違うことがあるので、そのときは「今のRP合計を入れ直す」で直してください。", false);
+          showBanner(up ? "🎉 " + afterDiv + " に上がりました！" : afterDiv + " に下がりました。降格保護がある場合はゲームと違うことがあるので、そのときは「今のランクとRPを入れ直す」で直してください。", false);
         }
       })
       .catch(function(){ records = records.filter(function(x){ return x.id !== rec.id; }); })  // 画面を戻す（入力した数字は残す）
@@ -604,9 +624,14 @@
   function saveBase(){
     if (!ready || busy) return;
     var raw = $("baseIn").value.replace(/[０-９]/g, function(c){ return String.fromCharCode(c.charCodeAt(0) - 0xFEE0); }).replace(/[^0-9]/g, "");
-    if (raw === ""){ showBanner("RP合計の数字を入れてください。", true); return; }
-    var val = parseInt(raw, 10);
-    if (!isFinite(val) || val > 100000){ showBanner("RP合計が大きすぎます。数字を確かめてください。", true); return; }
+    if (raw === ""){ showBanner("「○○ / ○○」の左側の数字を入れてください。", true); return; }
+    var d = DIVS[Number($("baseDiv").value)];
+    if (!d){ showBanner("ランクを選んでください。", true); return; }
+    var inDiv = parseInt(raw, 10);
+    if (!isFinite(inDiv) || (d.end !== null && inDiv >= d.end - d.start) || inDiv > 100000){
+      showBanner(d.name + "の数字は0〜" + (d.end === null ? "" : (d.end - d.start - 1)) + "で入れてください。左側の数字だけを入れます。", true); return;
+    }
+    var val = d.start + inDiv;   // 通算RPに換算して保存
     var prev = base;
     var ts = Date.now();
     busy = true; setButtons();
@@ -614,19 +639,19 @@
     call({ action: "setbase", val: val, ts: ts })
       .then(function(){ return call({ action: "getbase" }); })
       .then(function(j){
-        if (!j.base || Number(j.base.val) !== val || Number(j.base.ts) !== ts) throw new Error("保存したRP合計を読み戻せませんでした");
+        if (!j.base || Number(j.base.val) !== val || Number(j.base.ts) !== ts) throw new Error("保存したランクを読み戻せませんでした");
         base = { val: val, ts: ts };
         $("baseIn").value = "";
         $("baseBox").className = "basebox";
         lastCheck = "✅ 一致（" + new Date().toLocaleTimeString("ja-JP") + "）";
-        setSaveState("RP合計を保存しました（" + fmt(val) + " RP）", "ok");
+        setSaveState("ランクを保存しました（" + d.name + " " + fmt(inDiv) + (d.end === null ? " RP" : " / " + fmt(d.end - d.start)) + "）", "ok");
         showBanner("");
       })
       .catch(function(e){
         base = prev;
         lastCheck = "❌ 失敗";
-        setSaveState("RP合計の保存に失敗：" + errText(e), "ng");
-        showBanner("RP合計が保存できていません。もう一度お試しください。", true);
+        setSaveState("ランクの保存に失敗：" + errText(e), "ng");
+        showBanner("ランクが保存できていません。もう一度お試しください。", true);
       })
       .then(function(){ busy = false; render(); });
   }
@@ -639,6 +664,7 @@
   $("cYes").addEventListener("click", doUndo);
   $("baseSave").addEventListener("click", saveBase);
   $("baseOpen").addEventListener("click", function(){ $("baseBox").className = "basebox show"; });
+  $("baseDiv").addEventListener("change", updateDen);
   $("baseClose").addEventListener("click", function(){ $("baseBox").className = "basebox"; });
   document.addEventListener("visibilitychange", function(){
     if (document.visibilityState === "visible" && !busy && KEY) loadAll();
