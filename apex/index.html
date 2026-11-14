@@ -89,10 +89,45 @@
   .ptin{width:100%;background:#0f1114;border:1px solid var(--line);color:var(--text);border-radius:12px;padding:14px;font-size:22px;text-align:center;margin-bottom:10px}
   .hist .pt{font-size:13px;color:var(--sub);margin-left:6px}
   .hist .pt.plus{color:var(--win)} .hist .pt.minus{color:var(--lose)}
+  /* ===== 武器表 ===== */
+  .headrow{display:flex;justify-content:space-between;align-items:center}
+  .wpbtn{border:1px solid var(--line);background:var(--card);color:var(--text);border-radius:12px;
+    padding:9px 12px;font-size:14px;font-weight:700;cursor:pointer}
+  .wp{display:none;position:fixed;inset:0;z-index:50;background:var(--bg);overflow-y:auto;
+    padding:calc(12px + env(safe-area-inset-top,0px)) 14px calc(24px + env(safe-area-inset-bottom,0px))}
+  .wp.show{display:block}
+  .wp-in{max-width:520px;margin:0 auto}
+  .wp-cat{width:100%;display:flex;justify-content:space-between;align-items:center;text-align:left;
+    background:var(--card);border:1px solid var(--line);color:var(--text);border-radius:14px;
+    padding:16px 14px;margin-bottom:8px;font-size:18px;font-weight:800;cursor:pointer}
+  .wp-cat small{font-size:12px;color:var(--sub);font-weight:600;margin-left:6px}
+  .wp-cat .ar{color:var(--sub);font-size:14px}
+  .wp-list{display:none;list-style:none;margin:-4px 0 12px;padding:4px 14px;background:#15181d;border-radius:12px}
+  .wp-list.show{display:block}
+  .wp-list li{padding:12px 0;border-top:1px solid var(--line);font-size:17px;display:flex;align-items:center;gap:8px}
+  .wp-list li:first-child{border-top:none}
+  .cp{font-size:11px;font-weight:800;color:#1a1300;background:var(--warn);border-radius:6px;padding:2px 6px;white-space:nowrap}
+  .wp-note{font-size:12px;color:var(--sub);line-height:1.6;margin-top:12px}
 </style>
 </head>
 <body>
-  <h1>APEX <span>カウンター</span></h1>
+  <div class="headrow">
+    <h1>APEX <span>カウンター</span></h1>
+    <button class="wpbtn" id="wpOpen" type="button">🔫 武器表</button>
+  </div>
+
+  <!-- 武器表（見るだけの画面。保存とは関係なし） -->
+  <div class="wp" id="wp">
+    <div class="wp-in">
+      <div class="headrow" style="margin-bottom:10px">
+        <h1 style="margin:4px 0">🔫 武器表</h1>
+        <button class="wpbtn" id="wpClose" type="button">← 戻る</button>
+      </div>
+      <div class="muted" style="margin-bottom:12px">種類を押すと、その種類の武器が出ます。</div>
+      <div id="wpBody"></div>
+      <div class="wp-note"><span class="cp">ケアパケ</span> ＝ 空から落ちてくるケアパッケージなどからしか出ない武器です。<br>シーズン31「サイファー」時点の内容です。ケアパケの中身はシーズンごとに入れ替わります。</div>
+    </div>
+  </div>
 
   <div id="banner" class="banner"></div>
 
@@ -640,6 +675,63 @@
   } else {
     loadAll().then(function(){ if (!ready && /合言葉/.test(lastErr)) showSetup(true); });
   }
+})();
+</script>
+<script>
+// ===== 武器表（見るだけ。記録・保存の処理とは完全に別） =====
+(function(){
+  var CP = "ケアパケ";
+  var WEAPONS = [
+    { name:"アサルトライフル", abbr:"AR", list:[
+      ["ハボックライフル"], ["VK-47フラットライン"], ["ヘムロックバーストAR"], ["R-301カービン"], ["ネメシスバーストAR"] ]},
+    { name:"サブマシンガン", abbr:"SMG", list:[
+      ["オルタネーターSMG"], ["プラウラーバーストPDW"], ["R-99 SMG"], ["ボルトSMG"], ["C.A.R. SMG"] ]},
+    { name:"ライトマシンガン", abbr:"LMG", list:[
+      ["ディヴォーションLMG"], ["L-STAR EMG"], ["M600スピットファイア"], ["ランページLMG"] ]},
+    { name:"マークスマン", abbr:"", list:[
+      ["G7スカウト"], ["トリプルテイク"], ["30-30リピーター", CP], ["ボセックコンパウンドボウ"] ]},
+    { name:"スナイパーライフル", abbr:"", list:[
+      ["チャージライフル"], ["ロングボウDMR"], ["センチネル"], ["クレーバー.50口径スナイパー", CP] ]},
+    { name:"ショットガン", abbr:"", list:[
+      ["EVA-8オート"], ["マスティフ"], ["ピースキーパー"], ["モザンビーク（2丁持ち）", CP] ]},
+    { name:"ピストル", abbr:"", list:[
+      ["RE-45バースト"], ["P2020"], ["ウィングマン"] ]}
+  ];
+
+  function el(id){ return document.getElementById(id); }
+  var body = el("wpBody");
+  WEAPONS.forEach(function(cat){
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "wp-cat";
+    btn.innerHTML = "<span>" + cat.name + (cat.abbr ? "<small>（" + cat.abbr + "）</small>" : "") +
+      "</span><span class=\"ar\">▼ " + cat.list.length + "種</span>";
+    var ul = document.createElement("ul");
+    ul.className = "wp-list";
+    cat.list.forEach(function(w){
+      var li = document.createElement("li");
+      li.textContent = w[0];
+      if (w[1]) { var b = document.createElement("span"); b.className = "cp"; b.textContent = w[1]; li.appendChild(b); }
+      ul.appendChild(li);
+    });
+    btn.addEventListener("click", function(){
+      var open = ul.classList.toggle("show");
+      btn.querySelector(".ar").textContent = (open ? "▲ " : "▼ ") + cat.list.length + "種";
+    });
+    body.appendChild(btn);
+    body.appendChild(ul);
+  });
+
+  var scrollY = 0;
+  el("wpOpen").addEventListener("click", function(){
+    scrollY = window.scrollY || 0;
+    el("wp").classList.add("show");
+    el("wp").scrollTop = 0;
+  });
+  el("wpClose").addEventListener("click", function(){
+    el("wp").classList.remove("show");
+    window.scrollTo(0, scrollY);
+  });
 })();
 </script>
 </body>
