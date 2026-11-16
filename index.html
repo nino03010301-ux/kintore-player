@@ -327,8 +327,10 @@ const ORIGINAL_PARTS = {v1:'leg',v2:'leg',v3:'chest',v4:'back',v5:'glute',v6:'ab
 /* おすすめ候補。本体は suggest.json(毎月1日にClaudeが部位ごとに1本足す)。読めなかったときはこの控えを使う */
 let SUGGEST = [{"part": "leg", "name": "脚トレ(BPM)", "yt": "TliT7JOc0l0", "by": "鈴木達也", "len": "4:16", "added": "2026-11-13"}, {"part": "leg", "name": "下半身全体の脚トレ(BPM)", "yt": "dG-kANizANI", "by": "鈴木達也", "len": "4:04", "added": "2026-11-13"}, {"part": "leg", "name": "スプリットスクワット", "yt": "YIwOrxgqBvk", "by": "MELOS", "len": "4:41", "added": "2026-11-13"}, {"part": "leg", "name": "ワイドスクワット", "yt": "zbg6S0HwETM", "by": "MELOS", "len": "2:28", "added": "2026-11-13"}, {"part": "leg", "name": "ブルガリアンスクワット", "yt": "AqKiDWd5WDw", "by": "MELOS", "len": "4:20"}, {"part": "leg", "name": "サイドランジ", "yt": "pXrjm2rqytw", "by": "MELOS", "len": "2:02"}, {"part": "leg", "name": "フロントランジ", "yt": "ZRfEIEeWh0I", "by": "MELOS", "len": "2:00"}, {"part": "leg", "name": "カーフレイズ(ふくらはぎ)", "yt": "936AZbyQqEg", "by": "MELOS", "len": "2:41", "added": "2026-11-13"}, {"part": "chest", "name": "胸の腕立て伏せ(BPM)", "yt": "JSqARqeD2NE", "by": "鈴木達也", "len": "6:29", "added": "2026-11-13"}, {"part": "chest", "name": "二の腕トレ(BPM)", "yt": "WwHxI0rhgE0", "by": "鈴木達也", "len": "4:14", "added": "2026-11-13"}, {"part": "chest", "name": "膝つき腕立て伏せ", "yt": "YwtqHZqFDTc", "by": "MELOS", "len": "2:39"}, {"part": "chest", "name": "時短の腕と胸トレ", "yt": "TMINEwWfmo8", "by": "MELOS", "len": "1:36", "added": "2026-11-13"}, {"part": "chest", "name": "ショルダータッププランク", "yt": "BEdL5Nkec5k", "by": "MELOS", "len": "2:22"}, {"part": "back", "name": "後ろ姿を作る背中トレ(BPM)", "yt": "wASoZxlw2q4", "by": "鈴木達也", "len": "3:31", "added": "2026-11-13"}, {"part": "back", "name": "背筋トレ(BPM)", "yt": "iwDiuKV3u7k", "by": "鈴木達也", "len": "4:35", "added": "2026-11-13"}, {"part": "back", "name": "背筋4種目2分", "yt": "XH7_0UH9DfU", "by": "MELOS", "len": "2:58", "added": "2026-11-13"}, {"part": "back", "name": "バックエクステンション", "yt": "YvQZ7CAIFlA", "by": "MELOS", "len": "3:10"}, {"part": "back", "name": "猫背に効く背中トレ2分", "yt": "R7Enjq6Bpz4", "by": "MELOS", "len": "1:54", "added": "2026-11-13"}, {"part": "glute", "name": "お尻トレ(BPM)", "yt": "i4sZkRL-_Uk", "by": "鈴木達也", "len": "4:29", "added": "2026-11-13"}, {"part": "glute", "name": "体幹とお尻トレ(BPM)", "yt": "g-NY7tB06_0", "by": "鈴木達也", "len": "4:47", "added": "2026-11-13"}, {"part": "glute", "name": "ドンキーキック", "yt": "Q8jPbOAmFqI", "by": "MELOS", "len": "2:37", "added": "2026-11-13"}, {"part": "glute", "name": "ワンレッグヒップリフト", "yt": "Rk5dK46HtbU", "by": "MELOS", "len": "3:04"}, {"part": "glute", "name": "ファイヤーハイドラント", "yt": "NyEz6ZlRxLY", "by": "MELOS", "len": "4:00"}, {"part": "glute", "name": "立ったままお尻トレ", "yt": "gX_F6fa0Rtk", "by": "MELOS", "len": "2:51", "added": "2026-11-13"}, {"part": "abs", "name": "へこます腹筋(BPM)", "yt": "QPglX9uPaG4", "by": "鈴木達也", "len": "3:20", "added": "2026-11-13"}, {"part": "abs", "name": "腹筋トレ(BPM)", "yt": "OpEXuNXjJ0g", "by": "鈴木達也", "len": "4:40", "added": "2026-11-13"}, {"part": "abs", "name": "レッグレイズ", "yt": "y_sZA8ixCBw", "by": "MELOS", "len": "2:10"}, {"part": "abs", "name": "プランク", "yt": "UgkU2S8VUX4", "by": "MELOS", "len": "2:20"}, {"part": "abs", "name": "ロシアンツイスト", "yt": "FVQ8KN2g-ig", "by": "MELOS", "len": "3:07"}, {"part": "abs", "name": "バイシクルクランチ", "yt": "kXsKYJcXxpA", "by": "MELOS", "len": "1:45"}, {"part": "abs", "name": "リバースクランチ", "yt": "EhX4ZtBBh34", "by": "MELOS", "len": "3:41"}];
 fetch('suggest.json?t='+Date.now(), {cache:'no-store'}).then(r=>r.ok?r.json():null).then(j=>{
+  if(j && Array.isArray(j.ng)) SUGGEST_NG = j.ng;
   if(j && Array.isArray(j.items) && j.items.length){ SUGGEST = j.items; if(data && !$('tab-cut').hidden) renderSuggest(); }
 }).catch(()=>{});
+let SUGGEST_NG = [];  // suggest.json の ng（Claudeが毎月の追加のときに移した「削除済み」）
 function isNew(sg){ return sg.added && (Date.now()-new Date(sg.added+'T00:00:00'))/86400000 <= 35; }
 const PART_GOAL = {leg:6, chest:3, back:3, glute:3, abs:6}; // 部位ごとの候補数の目安
 
@@ -348,7 +350,8 @@ const DEFAULT_DATA = {
   plan: null,     // 今週の組み合わせ {week:'YYYY-MM-DD(月曜)', picks:{mon:[動画id…],…}}
   history: [],    // 過去の週の組み合わせ(新しい順、8週ぶん)
   done: [],
-  durations: {}   // 動画全体の長さ(秒)を覚えておく(残り時間の目安用)
+  durations: {},  // 動画全体の長さ(秒)を覚えておく(残り時間の目安用)
+  sugHide: []     // おすすめ候補で「削除」した動画 [{yt,key,name,part,at}]。同じ動画・同じ種目名は二度と出さない
 };
 
 /* ================= 状態 ================= */
@@ -584,7 +587,8 @@ function normalize(d){
   DAYS.forEach(day=>{ if(!Array.isArray(slots[day.k])) slots[day.k]=[]; });
   return { version:2, videos, menus, slots,
     plan: d.plan||null, history: Array.isArray(d.history)?d.history:[],
-    done: Array.isArray(d.done)?d.done:[], durations: d.durations||{} };
+    done: Array.isArray(d.done)?d.done:[], durations: d.durations||{},
+    sugHide: Array.isArray(d.sugHide)?d.sugHide:[] };
 }
 function showSetup(msg){
   $('setup').hidden = false;
@@ -856,14 +860,25 @@ $('cutPart').onchange = ()=>{
   v.part = p; markDirty(); renderCut(); toast(p?'部位を「'+partLabel(p)+'」にしました':'部位なしにしました（入れ替えに出ません）');
 };
 $('clearCheckBtn').onclick = ()=>{ updateCut(v=>v.needCheck=false); toast('「要確認」を外しました'); };
+/* おすすめ候補の「削除」：同じ動画、または同じ種目名(exKey)は二度と出さない */
+function sugBanned(sg){
+  const k = exKey(sg.name);
+  const list = [...(data.sugHide||[]), ...SUGGEST_NG];
+  return list.some(h=>h && (h.yt===sg.yt || (h.key||exKey(h.name))===k));
+}
 function renderSuggest(){
   const have = new Set(data.videos.map(v=>v.yt));
-  $('suggList').innerHTML = PARTS.map(p=>{
-    const list = SUGGEST.filter(s=>s.part===p.k).sort((a,b)=>(b.added||'').localeCompare(a.added||'')); if(!list.length) return '';
+  const html = PARTS.map(p=>{
+    const list = SUGGEST.filter(s=>s.part===p.k && (have.has(s.yt) || !sugBanned(s))).sort((a,b)=>(b.added||'').localeCompare(a.added||'')); if(!list.length) return '';
     return `<div class="vgroup">${p.l}</div><ul class="sugg">${list.map(s=>`<li><span class="t">${esc(s.name)}${isNew(s)?'<span class="badge unset">新着</span>':''}<small>${esc(s.by)}・${s.len}</small></span>
       <a href="https://www.youtube.com/watch?v=${s.yt}" target="_blank" rel="noopener">見る</a>
-      ${have.has(s.yt)?'<span class="muted" style="font-size:12px">登録済み</span>':`<button class="btn" style="padding:4px 10px" data-sg="${s.yt}">登録</button>`}</li>`).join('')}</ul>`;
+      ${have.has(s.yt)?'<span class="muted" style="font-size:12px">登録済み</span>':`<button class="btn" style="padding:4px 10px" data-sg="${s.yt}">登録</button><button class="btn" style="padding:4px 10px;color:#c0392b" data-sgdel="${s.yt}" title="この動画と同じ種目名の動画を、二度とおすすめに出しません">削除</button>`}</li>`).join('')}</ul>`;
   }).join('');
+  const hid = data.sugHide||[];
+  const hidHtml = hid.length ? `<details style="margin-top:14px"><summary class="muted" style="cursor:pointer;font-size:13px">削除した候補（${hid.length}件）…二度と出しません</summary>
+    <ul class="sugg" style="margin-top:6px">${hid.map((h,i)=>`<li><span class="t">${esc(h.name)}<small>${esc(partLabel(h.part))}・${esc(h.at||'')}に削除</small></span>
+      <button class="btn" style="padding:4px 10px" data-sgback="${i}">元に戻す</button></li>`).join('')}</ul></details>` : '';
+  $('suggList').innerHTML = (html || '<p class="muted" style="font-size:13px">今は候補がありません。毎月1日に新しい候補が届きます。</p>') + hidHtml;
   $('suggList').querySelectorAll('[data-sg]').forEach(b=>b.onclick=()=>{
     const s = SUGGEST.find(x=>x.yt===b.dataset.sg); if(!s || data.videos.some(v=>v.yt===s.yt)) return;
     const id = 'v'+Date.now().toString(36);
@@ -872,6 +887,18 @@ function renderSuggest(){
     if(twin) setTimeout(()=>toast(`「${twin.name}」と同じ種目あつかいなので、同じ日には一緒に出ません`), 2800);
     cutId = id; markDirty(); renderCut(); loadCut();
     toast(`「${s.name}」を登録しました。右で「ここから・ここまで」を決めてください`);
+  });
+  $('suggList').querySelectorAll('[data-sgdel]').forEach(b=>b.onclick=()=>{
+    const s = SUGGEST.find(x=>x.yt===b.dataset.sgdel); if(!s || data.videos.some(v=>v.yt===s.yt)) return;
+    if(!Array.isArray(data.sugHide)) data.sugHide = [];
+    if(!data.sugHide.some(h=>h.yt===s.yt)) data.sugHide.push({yt:s.yt, key:exKey(s.name), name:s.name, part:s.part, at:todayStr()});
+    markDirty(); renderSuggest();
+    toast(`「${s.name}」を削除しました。同じ種目名の動画も、もうおすすめに出ません（下の「削除した候補」から戻せます）`);
+  });
+  $('suggList').querySelectorAll('[data-sgback]').forEach(b=>b.onclick=()=>{
+    const h = (data.sugHide||[])[+b.dataset.sgback]; if(!h) return;
+    data.sugHide.splice(+b.dataset.sgback, 1);
+    markDirty(); renderSuggest(); toast(`「${h.name}」をおすすめに戻しました`);
   });
 }
 $('renameBtn').onclick = ()=>{
