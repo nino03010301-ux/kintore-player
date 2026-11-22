@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>反転プレイヤー</title>
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="反転プレイヤー">
+<meta name="theme-color" content="#131316">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 練習スタジオの道具。静かで、操作だけがはっきり見える
+   IDEA: ダンススタジオの鏡。動画は鏡に映った向きで流れる
+   PICTURE: 動画そのものが主役。下に操作盤、横に最近の動画
+   COLOUR and TYPE: 暗い床色に白、鏡ガラスの水色を差し色。Zen Kaku Gothic New
+   LAYOUT: PCは動画＋右に履歴、スマホは縦に積む */
+:root{color-scheme:dark;--bg:#131316;--panel:#1c1c21;--line:#2d2d35;--ink:#f3f3f5;--sub:#a3a3ad;--acc:#4cc9f0;--accd:#163a47;--ok:#3ccf7a;--bad:#ff5a6e}
+*{box-sizing:border-box;min-width:0}
+html,body{margin:0;background:var(--bg);color:var(--ink)}
+body{font:16px/1.55 "Zen Kaku Gothic New",system-ui,sans-serif;-webkit-text-size-adjust:100%;overflow-x:clip;padding-bottom:env(safe-area-inset-bottom,0px)}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer;min-height:44px;border-radius:10px;border:1px solid var(--line);background:var(--panel);padding:0 14px;white-space:nowrap}
+button:hover{border-color:#4a4a55}
+button:focus-visible,input:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.on{background:var(--accd);border-color:var(--acc);color:#dff6fd}
+.primary{background:var(--acc);border-color:var(--acc);color:#04222c;font-weight:700}
+.top{display:flex;gap:12px;align-items:center;padding:12px max(3vw,14px);padding-top:max(12px,env(safe-area-inset-top,0px));border-bottom:1px solid var(--line);flex-wrap:wrap}
+.brand{font-weight:900;font-size:19px;letter-spacing:.02em;display:flex;align-items:center;gap:8px}
+.brand svg{width:26px;height:26px}
+.open{flex:1 1 380px;display:flex;gap:8px}
+.open input{flex:1;min-height:44px;font-size:16px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:#0e0e11}
+.save{font-size:14px;color:var(--sub);display:flex;align-items:center;gap:6px}
+.save::before{content:"";width:9px;height:9px;border-radius:50%;background:#55555f}
+.save.ok::before{background:var(--ok)}.save.saving::before{background:var(--acc)}.save.bad{color:var(--bad);border-color:var(--bad)}.save.bad::before{background:var(--bad)}
+.banner{margin:12px max(3vw,14px) 0;padding:12px 14px;border-radius:10px;background:#3a1219;border:1px solid var(--bad);display:flex;gap:12px;align-items:center;flex-wrap:wrap}
+.banner span{flex:1 1 240px}
+.wrap{display:grid;gap:18px;padding:16px max(3vw,14px) 28px;max-width:1500px;margin:0 auto}
+@media(min-width:1000px){.wrap{grid-template-columns:minmax(0,1fr) 330px}}
+#player{display:flex;flex-direction:column;gap:12px}
+.stage{position:relative;aspect-ratio:16/9;width:min(100%,calc((100vh - 330px)*16/9));min-width:min(100%,320px);margin-inline:auto;background:#000;border-radius:14px;overflow:hidden}
+.ytbox{position:absolute;inset:0}
+.ytbox.mirror{transform:scaleX(-1)}
+.ytbox iframe{position:absolute;inset:0;width:100%;height:100%;border:0}
+.tap{position:absolute;inset:0}
+.tap.pass{pointer-events:none}
+.empty,.err{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:14px;text-align:center;padding:20px;background:#0b0b0d}
+.empty svg{width:min(260px,50%);height:auto}
+.empty p,.err p{margin:0;color:var(--sub);max-width:34em}
+.err p{color:var(--ink)}
+.err a{color:var(--acc);font-weight:700}
+.ctl{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:grid;gap:12px}
+.seek{display:flex;gap:12px;align-items:center}
+.bar{position:relative;flex:1;height:28px}
+.bar input{position:absolute;inset:0;width:100%;margin:0;background:transparent;-webkit-appearance:none;appearance:none}
+.bar input::-webkit-slider-runnable-track{height:6px;border-radius:3px;background:#3a3a44}
+.bar input::-moz-range-track{height:6px;border-radius:3px;background:#3a3a44}
+.bar input::-webkit-slider-thumb{-webkit-appearance:none;width:18px;height:18px;border-radius:50%;background:#fff;margin-top:-6px;position:relative;z-index:2}
+.bar input::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#fff;border:0}
+.region{position:absolute;top:8px;height:12px;background:rgba(76,201,240,.45);border-left:2px solid var(--acc);border-right:2px solid var(--acc);pointer-events:none;z-index:1}
+.time{font-variant-numeric:tabular-nums;color:var(--sub);font-size:14px;white-space:nowrap}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.row .grow{flex:1}
+.grp{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.play{min-width:64px;font-size:18px}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:transparent;min-width:52px;padding:0 10px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button.on{background:var(--accd);color:#dff6fd}
+.lbl{font-size:14px;color:var(--sub);margin-right:2px}
+.ab b{font-variant-numeric:tabular-nums;font-weight:700;margin-left:6px}
+.keys{font-size:13px;color:var(--sub);margin:0}
+.keys kbd{font:inherit;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 5px;margin:0 2px;color:var(--ink)}
+@media(hover:none){.keys{display:none}}
+aside h2{font-size:17px;margin:0 0 10px}
+.hist{display:grid;gap:8px;list-style:none;margin:0;padding:0}
+.hist li{display:flex;gap:6px;align-items:stretch}
+.hist .go{flex:1;display:flex;gap:10px;align-items:center;text-align:left;padding:6px;white-space:normal;height:auto}
+.hist .go.cur{border-color:var(--acc)}
+.hist img{width:96px;aspect-ratio:16/9;object-fit:cover;border-radius:6px;flex:none;background:#000;transform:scaleX(-1)}
+.hist .t{font-size:14px;font-weight:700;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.hist .m{font-size:13px;color:var(--sub);font-variant-numeric:tabular-nums}
+.hist .del{padding:0 10px;color:var(--sub)}
+.hist .del.ask{color:#fff;background:var(--bad);border-color:var(--bad)}
+.note{color:var(--sub);font-size:14px;margin:0 0 10px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:#fff;color:#111;padding:10px 16px;border-radius:10px;font-weight:700;z-index:99;max-width:92vw;text-align:center}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.6);display:grid;place-items:center;z-index:80;padding:16px}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:20px;width:min(520px,100%);display:grid;gap:12px}
+.box h2{margin:0;font-size:19px}
+.box label{display:grid;gap:4px;font-size:14px;color:var(--sub)}
+.box input{min-height:44px;font-size:16px;padding:0 12px;border-radius:10px;border:1px solid var(--line);background:#0e0e11}
+.box .msg{min-height:1.5em;margin:0;font-size:14px}
+[hidden]{display:none!important}
+/* 大きく表示 */
+#player:fullscreen,body.pseudo #player{position:fixed;inset:0;z-index:60;background:#000;padding:10px;padding-bottom:max(10px,env(safe-area-inset-bottom,0px));gap:8px}
+#player:fullscreen .stage,body.pseudo #player .stage{flex:1;aspect-ratio:auto;width:100%;border-radius:0}
+#player:fullscreen .ctl,body.pseudo #player .ctl{background:#111;padding:8px 10px;gap:8px}
+#player:fullscreen .keys,body.pseudo .keys{display:none}
+body.pseudo{overflow:hidden}
+@media(max-width:600px){.ctl{padding:10px}.seg button{min-width:44px;padding:0 6px}.hist img{width:84px}}
+</style>
+</head>
+<body>
+<header class="top">
+  <div class="brand"><svg viewBox="0 0 32 32" aria-hidden="true"><path d="M14 6 4 16l10 10z" fill="#4cc9f0"/><path d="M18 6l10 10-10 10z" fill="#f3f3f5"/></svg>反転プレイヤー</div>
+  <form id="openForm" class="open">
+    <input id="urlIn" type="url" inputmode="url" placeholder="YouTubeのURLを貼る" autocomplete="off" aria-label="YouTubeのURL">
+    <button type="submit" class="primary">開く</button>
+  </form>
+  <button id="saveStatus" class="save" type="button"><span id="saveText">準備中…</span></button>
+</header>
+<div id="banner" class="banner" hidden><span id="bannerText"></span><button id="bannerRetry" type="button" hidden>もう一度保存</button></div>
+
+<main class="wrap">
+  <section id="player">
+    <div class="stage" id="stage">
+      <div id="ytbox" class="ytbox mirror"><div id="yt"></div></div>
+      <div id="tap" class="tap" title="クリックで再生／停止"></div>
+      <div id="empty" class="empty">
+        <svg viewBox="0 0 260 120" aria-hidden="true"><rect x="2" y="2" width="256" height="116" rx="12" fill="none" stroke="#2d2d35" stroke-width="2"/><line x1="130" y1="14" x2="130" y2="106" stroke="#4cc9f0" stroke-dasharray="5 6" stroke-width="2"/><path d="M110 40 70 60l40 20z" fill="#4cc9f0" opacity=".9"/><path d="M150 40l40 20-40 20z" fill="#f3f3f5"/></svg>
+        <p>上の欄にYouTubeのURLを貼ると、左右が反転した動画が流れます。鏡を見るように同じ向きで動けます。</p>
+      </div>
+      <div id="err" class="err" hidden><p id="errText"></p><a id="errLink" href="#" target="_blank" rel="noopener">YouTubeで開く</a></div>
+    </div>
+
+    <div class="ctl">
+      <div class="seek">
+        <div class="bar"><div id="region" class="region" hidden></div><input id="seek" type="range" min="0" max="100" step="0.1" value="0" aria-label="再生位置"></div>
+        <span class="time" id="time">0:00 / 0:00</span>
+      </div>
+      <div class="row">
+        <button id="back" type="button" title="5秒戻る">−5秒</button>
+        <button id="playBtn" class="play primary" type="button" aria-label="再生">▶</button>
+        <button id="fwd" type="button" title="5秒進む">＋5秒</button>
+        <span class="grow"></span>
+        <div class="grp"><span class="lbl">速さ</span><div class="seg" id="speeds"></div></div>
+      </div>
+      <div class="row">
+        <span class="lbl">区間</span>
+        <button id="setA" class="ab" type="button">ここから<b id="aTime">—</b></button>
+        <button id="setB" class="ab" type="button">ここまで<b id="bTime">—</b></button>
+        <button id="loopBtn" type="button" class="on">くり返し</button>
+        <button id="clearAB" type="button">区間を消す</button>
+        <span class="grow"></span>
+        <button id="mirrorBtn" type="button" class="on">反転</button>
+        <button id="bigBtn" type="button">大きく</button>
+      </div>
+      <p class="keys"><kbd>スペース</kbd>再生/停止 <kbd>←</kbd><kbd>→</kbd>5秒 <kbd>A</kbd>ここから <kbd>B</kbd>ここまで <kbd>R</kbd>くり返し <kbd>−</kbd><kbd>＋</kbd>速さ <kbd>M</kbd>反転 <kbd>F</kbd>大きく</p>
+    </div>
+  </section>
+
+  <aside>
+    <h2>最近見た動画</h2>
+    <div id="histBox"></div>
+  </aside>
+</main>
+
+<div id="setup" class="modal" hidden>
+  <form class="box" id="setupForm">
+    <h2>保存先の設定</h2>
+    <p class="note" style="margin:0">スプレッドシートの「ウェブアプリのURL」と「合言葉」を入れてください。PCとスマホでそれぞれ1回だけ必要です。</p>
+    <label>ウェブアプリのURL<input id="setupUrl" type="url" placeholder="https://script.google.com/macros/s/……/exec" autocomplete="off"></label>
+    <label>合言葉<input id="setupKey" type="text" autocomplete="off"></label>
+    <p class="msg" id="setupMsg"></p>
+    <div class="row"><button type="submit" class="primary">つないで保存を始める</button><button type="button" id="setupClose">あとで</button></div>
+  </form>
+</div>
+<div id="toast" hidden></div>
+
+<script>
+{
+const $ = id => document.getElementById(id);
+const SPEEDS = [0.5, 0.75, 1, 1.25, 1.5];
+const MAX_ITEMS = 50;
+const LS_URL = 'hanten_saveUrl', LS_KEY = 'hanten_key'; // 保存先の設定だけ。記録はスプレッドシートにだけ置く
+function lsGet(k){ try{ return localStorage.getItem(k) || ''; }catch(e){ return ''; } }
+function lsSet(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+
+let saveUrl = lsGet(LS_URL), KEY = lsGet(LS_KEY);
+let connected = false, rev = 0, saved = {version:1, items:[]};
+let pending = [], saving = false, saveTimer = null, statusKind = '';
+let cur = null, player = null, ytReady = false, appliedFor = '', dragging = false, mirror = true;
+const ytWaiters = [];
+
+/* ---------- 小道具 ---------- */
+function esc(s){ return String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function fmt(t){
+  if(t == null || !isFinite(t)) return '—';
+  t = Math.max(0, Math.floor(t));
+  const h = Math.floor(t/3600), m = Math.floor(t%3600/60), s = String(t%60).padStart(2,'0');
+  return h ? h+':'+String(m).padStart(2,'0')+':'+s : m+':'+s;
+}
+function hm(){ const d = new Date(); return d.getHours()+':'+String(d.getMinutes()).padStart(2,'0'); }
+function errText(e){ if(!e) return '不明なエラー'; const c = e.code || ''; return (c ? c+' / ' : '') + (e.message || String(e)); }
+let toastTimer = null;
+function toast(msg){ const t = $('toast'); t.textContent = msg; t.hidden = false; clearTimeout(toastTimer); toastTimer = setTimeout(() => t.hidden = true, 2600); }
+function parseId(s){
+  s = (s || '').trim();
+  if(/^[\w-]{11}$/.test(s)) return s;
+  let u; try{ u = new URL(s.startsWith('http') ? s : 'https://'+s); }catch(e){ return null; }
+  const host = u.hostname.replace(/^www\.|^m\.|^music\./, '');
+  let id = null;
+  if(host === 'youtu.be') id = u.pathname.slice(1).split('/')[0];
+  else if(/(^|\.)youtube(-nocookie)?\.com$/.test(host)){
+    id = u.searchParams.get('v');
+    const m = u.pathname.match(/^\/(shorts|embed|live|v)\/([\w-]{11})/);
+    if(!id && m) id = m[2];
+  }
+  return id && /^[\w-]{11}$/.test(id) ? id : null;
+}
+
+/* ---------- 保存（スプレッドシート） ---------- */
+function setStatus(kind, text){ statusKind = kind; $('saveStatus').className = 'save '+kind; $('saveText').textContent = text; }
+function showBanner(text, retry){ $('bannerText').textContent = text; $('bannerRetry').hidden = !retry; $('banner').hidden = false; }
+function hideBanner(){ $('banner').hidden = true; }
+async function apiGet(url, key){
+  const r = await fetch(url + (url.includes('?') ? '&' : '?') + 'key=' + encodeURIComponent(key) + '&t=' + Date.now(), {cache:'no-store'});
+  if(!r.ok) throw new Error('通信エラー（'+r.status+'）');
+  const j = await r.json();
+  if(!j.ok) throw new Error(j.error || '読み込みに失敗しました');
+  return j;
+}
+async function apiPost(payload){
+  const r = await fetch(saveUrl, {method:'POST', body: JSON.stringify(payload)}); // text/plainで送る
+  if(!r.ok) throw new Error('通信エラー（'+r.status+'）');
+  return r.json();
+}
+function normData(d){ return {version:1, items: (d && Array.isArray(d.items)) ? d.items.filter(x => x && /^[\w-]{11}$/.test(x.id)) : []}; }
+function applyOp(d, op){
+  let items = d.items.filter(x => x.id !== (op.t === 'up' ? op.item.id : op.id));
+  if(op.t === 'up') items.unshift(op.item);
+  return {version:1, items: items.slice(0, MAX_ITEMS)};
+}
+function queue(op){
+  if(!connected) return;
+  pending.push(op);
+  if(statusKind !== 'bad') setStatus('saving', '保存待ち…');
+  clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 700);
+}
+async function saveNow(){
+  if(!connected || !pending.length) return;
+  if(saving){ clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 500); return; }
+  saving = true;
+  const ops = pending.slice();
+  setStatus('saving', '保存中…');
+  try{
+    let base = saved, baseRev = rev, res, next, tries = 0;
+    while(true){
+      next = ops.reduce(applyOp, JSON.parse(JSON.stringify(base)));
+      res = await apiPost({key: KEY, baseRev, data: next});
+      if(res && res.conflict && tries < 2){ base = normData(res.data); baseRev = res.rev; tries++; continue; } // 別の端末で先に保存されていた → その上に重ねて送り直す
+      break;
+    }
+    if(!res || res.conflict) throw new Error('別の端末と同時に保存されたため保存できませんでした');
+    if(!res.ok) throw new Error(res.error || '保存に失敗しました');
+    // 読み戻して、送った中身とまったく同じか確かめる
+    const chk = await apiGet(saveUrl, KEY);
+    if(chk.rev !== res.rev || JSON.stringify(chk.data) !== JSON.stringify(next)) throw new Error('保存後の読み戻しで中身が一致しませんでした');
+    saved = normData(chk.data); rev = chk.rev;
+    pending.splice(0, ops.length);
+    setStatus('ok', '保存しました ✓ '+hm());
+    hideBanner();
+    renderHistory();
+  }catch(e){
+    setStatus('bad', '保存できませんでした');
+    showBanner('保存できていません：'+errText(e)+'。今の区間・速さはまだ履歴に入っていません。', true);
+    renderHistory(); // 履歴は保存が確認できた状態のまま表示
+  }finally{
+    saving = false;
+    if(pending.length && statusKind !== 'bad'){ clearTimeout(saveTimer); saveTimer = setTimeout(saveNow, 300); }
+  }
+}
+$('bannerRetry').onclick = () => { if(connected) saveNow(); else boot(); };
+$('saveStatus').onclick = () => { if(!connected) openSetup(); else if(statusKind === 'bad') saveNow(); };
+window.addEventListener('beforeunload', e => { if(pending.length || saving){ e.preventDefault(); e.returnValue = ''; } });
+
+async function boot(){
+  if(!saveUrl || !KEY){ connected = false; setStatus('', '履歴：保存先が未設定'); renderHistory(); return; }
+  setStatus('saving', '読み込み中…');
+  try{
+    const j = await apiGet(saveUrl, KEY);
+    saved = normData(j.data); rev = j.rev; connected = true;
+    setStatus('ok', '読み込みました ✓'); hideBanner();
+  }catch(e){
+    connected = false;
+    setStatus('bad', '保存先につながりません');
+    showBanner('履歴を読み込めませんでした：'+errText(e)+'。動画の再生はできますが、履歴は保存されません。', true);
+    $('bannerRetry').textContent = 'もう一度つなぐ';
+  }
+  renderHistory();
+}
+
+/* ---------- 保存先の設定 ---------- */
+function openSetup(){ $('setupUrl').value = saveUrl; $('setupKey').value = KEY; $('setupMsg').textContent = ''; $('setup').hidden = false; }
+$('setupClose').onclick = () => $('setup').hidden = true;
+$('setupForm').onsubmit = async e => {
+  e.preventDefault();
+  const u = $('setupUrl').value.trim(), k = $('setupKey').value.trim();
+  if(!/^https:\/\/script\.google(usercontent)?\.com\/.+\/exec/.test(u)){ $('setupMsg').textContent = '「https://script.google.com/」で始まり「/exec」で終わるURLを貼ってください。'; return; }
+  if(!k){ $('setupMsg').textContent = '合言葉を入れてください。'; return; }
+  $('setupMsg').textContent = '接続を確かめています…';
+  try{
+    await apiGet(u, k);
+    saveUrl = u; KEY = k; lsSet(LS_URL, u); lsSet(LS_KEY, k);
+    $('setup').hidden = true; $('bannerRetry').textContent = 'もう一度保存';
+    await boot();
+    if(connected && cur) saveCur();
+    toast('保存先につながりました');
+  }catch(err){ $('setupMsg').textContent = 'つながりませんでした：'+errText(err)+'（デプロイの「アクセスできるユーザー」が「全員」になっているか確認してください）'; }
+};
+
+/* ---------- 履歴 ---------- */
+let askDel = '', askTimer = null;
+function renderHistory(){
+  const box = $('histBox');
+  if(!connected){
+    box.innerHTML = '<p class="note">保存先につなぐと、見た動画と区間・速さがPCとスマホで共通で残ります。</p><button type="button" id="goSetup">保存先を設定</button>';
+    $('goSetup').onclick = openSetup; return;
+  }
+  if(!saved.items.length){ box.innerHTML = '<p class="note">まだありません。動画を開くとここに並びます。</p>'; return; }
+  box.innerHTML = '<ul class="hist">' + saved.items.map(x => {
+    const sec = (x.a != null || x.b != null) ? '区間 '+fmt(x.a ?? 0)+'〜'+(x.b != null ? fmt(x.b) : '最後') : '区間なし';
+    return `<li><button type="button" class="go${cur && cur.id === x.id ? ' cur' : ''}" data-id="${x.id}"><img src="https://i.ytimg.com/vi/${x.id}/mqdefault.jpg" alt="" loading="lazy"><span><span class="t">${esc(x.title || x.id)}</span><span class="m">${sec}・${x.speed || 1}倍</span></span></button><button type="button" class="del${askDel === x.id ? ' ask' : ''}" data-del="${x.id}" aria-label="履歴から消す">${askDel === x.id ? '消す' : '×'}</button></li>`;
+  }).join('') + '</ul>';
+}
+$('histBox').onclick = e => {
+  const go = e.target.closest('[data-id]'), del = e.target.closest('[data-del]');
+  if(go) openVideo(go.dataset.id);
+  if(del){
+    const id = del.dataset.del;
+    if(askDel !== id){ askDel = id; clearTimeout(askTimer); askTimer = setTimeout(() => { askDel = ''; renderHistory(); }, 3000); renderHistory(); return; }
+    askDel = ''; queue({t:'del', id}); toast('履歴から消しています…');
+  }
+};
+
+/* ---------- YouTube ---------- */
+window.onYouTubeIframeAPIReady = () => { ytReady = true; ytWaiters.splice(0).forEach(f => f()); };
+function whenYt(f){ ytReady ? f() : ytWaiters.push(f); }
+(function(){ const s = document.createElement('script'); s.src = 'https://www.youtube.com/iframe_api'; s.onerror = () => showBanner('YouTubeの読み込みに失敗しました。通信状態を確認して、ページを開き直してください。', false); document.head.appendChild(s); })();
+
+const isTouch = matchMedia('(hover:none)').matches;
+let everPlayed = false;
+function openVideo(id){
+  const h = saved.items.find(x => x.id === id);
+  cur = h ? {id, title: h.title || '', a: h.a ?? null, b: h.b ?? null, loop: h.loop !== false, speed: h.speed || 1}
+          : {id, title: '', a: null, b: null, loop: true, speed: 1};
+  appliedFor = '';
+  $('empty').hidden = true; $('err').hidden = true;
+  $('tap').classList.toggle('pass', isTouch && !everPlayed); // スマホは最初の1回だけ動画を直接タップして再生
+  renderControls(); renderHistory();
+  const start = Math.floor(cur.a || 0);
+  whenYt(() => {
+    if(!player){
+      player = new YT.Player('yt', { videoId: id,
+        playerVars: {controls:0, disablekb:1, playsinline:1, rel:0, iv_load_policy:3, fs:0, modestbranding:1, start},
+        events: { onReady: () => { player.playVideo(); }, onStateChange: onState, onError: onErr } });
+    } else player.loadVideoById({videoId: id, startSeconds: start});
+  });
+  saveCur();
+}
+function saveCur(){ if(cur) queue({t:'up', item:{id: cur.id, title: cur.title, a: cur.a, b: cur.b, loop: cur.loop, speed: cur.speed, at: Date.now()}}); }
+function onState(e){
+  const S = YT.PlayerState;
+  $('playBtn').textContent = e.data === S.PLAYING ? '❚❚' : '▶';
+  $('playBtn').setAttribute('aria-label', e.data === S.PLAYING ? '一時停止' : '再生');
+  if(e.data === S.PLAYING){
+    if(!everPlayed){ everPlayed = true; $('tap').classList.remove('pass'); }
+    if(appliedFor !== cur.id){
+      appliedFor = cur.id;
+      try{ player.setPlaybackRate(cur.speed); }catch(err){}
+      const t = (player.getVideoData() || {}).title || '';
+      if(t && t !== cur.title){ cur.title = t; saveCur(); }
+    }
+  }
+  if(e.data === S.ENDED && cur && cur.loop){ player.seekTo(cur.a || 0, true); player.playVideo(); }
+}
+function onErr(e){
+  const msgs = {2:'URLが正しくないようです。', 5:'この動画はここでは再生できませんでした。', 100:'動画が見つかりません（削除されたか非公開です）。', 101:'この動画は持ち主が「他のサイトでの再生」を禁止しているため、ここでは再生できません。', 150:'この動画は持ち主が「他のサイトでの再生」を禁止しているため、ここでは再生できません。'};
+  $('errText').textContent = (msgs[e.data] || 'この動画は再生できませんでした。') + '（エラー '+e.data+'）';
+  $('errLink').href = 'https://www.youtube.com/watch?v=' + (cur ? cur.id : '');
+  $('err').hidden = false;
+}
+function ready(){ return player && typeof player.getCurrentTime === 'function' && cur; }
+
+/* ---------- 操作盤 ---------- */
+$('speeds').innerHTML = SPEEDS.map(s => `<button type="button" data-sp="${s}">${s}</button>`).join('');
+function renderControls(){
+  const has = !!cur;
+  document.querySelectorAll('.ctl button').forEach(b => { if(b.id !== 'mirrorBtn' && b.id !== 'bigBtn') b.disabled = !has; });
+  $('seek').disabled = !has;
+  document.querySelectorAll('#speeds button').forEach(b => b.classList.toggle('on', has && +b.dataset.sp === cur.speed));
+  $('aTime').textContent = has && cur.a != null ? fmt(cur.a) : '—';
+  $('bTime').textContent = has && cur.b != null ? fmt(cur.b) : '—';
+  $('setA').classList.toggle('on', has && cur.a != null);
+  $('setB').classList.toggle('on', has && cur.b != null);
+  $('loopBtn').classList.toggle('on', has && cur.loop);
+  $('mirrorBtn').classList.toggle('on', mirror);
+  drawRegion();
+}
+function drawRegion(){
+  const d = ready() ? player.getDuration() : 0, r = $('region');
+  if(!cur || !d || (cur.a == null && cur.b == null)){ r.hidden = true; return; }
+  const a = cur.a ?? 0, b = cur.b ?? d;
+  r.style.left = (a/d*100)+'%'; r.style.width = (Math.max(0, b-a)/d*100)+'%'; r.hidden = false;
+}
+function togglePlay(){ if(!ready()) return; player.getPlayerState() === YT.PlayerState.PLAYING ? player.pauseVideo() : player.playVideo(); }
+function jump(sec){ if(!ready()) return; const d = player.getDuration() || 0; player.seekTo(Math.min(Math.max(0, player.getCurrentTime()+sec), Math.max(0, d-0.3)), true); }
+function setSpeed(s){ if(!cur) return; cur.speed = s; try{ player && player.setPlaybackRate(s); }catch(e){} renderControls(); toast('速さ '+s+'倍'); saveCur(); }
+function stepSpeed(dir){ if(!cur) return; const i = SPEEDS.indexOf(cur.speed); const n = SPEEDS[Math.min(SPEEDS.length-1, Math.max(0, (i < 0 ? 2 : i)+dir))]; if(n !== cur.speed) setSpeed(n); }
+function setA(){
+  if(!ready()) return;
+  const t = Math.round(player.getCurrentTime()*10)/10;
+  if(cur.b != null && t >= cur.b - 0.5){ cur.b = null; toast('「ここまで」より後だったので「ここまで」を消しました'); }
+  else toast('ここから '+fmt(t));
+  cur.a = t; renderControls(); saveCur();
+}
+function setB(){
+  if(!ready()) return;
+  const t = Math.round(player.getCurrentTime()*10)/10;
+  if(t <= (cur.a ?? 0) + 0.5){ toast('「ここから」より後の場面で押してください'); return; }
+  cur.b = t; renderControls(); saveCur();
+  toast('ここまで '+fmt(t)+(cur.loop ? '（くり返します）' : ''));
+  if(cur.loop) player.seekTo(cur.a ?? 0, true);
+}
+function toggleLoop(){ if(!cur) return; cur.loop = !cur.loop; renderControls(); toast(cur.loop ? 'くり返し オン' : 'くり返し オフ'); saveCur(); }
+function clearAB(){ if(!cur || (cur.a == null && cur.b == null)) return; cur.a = null; cur.b = null; renderControls(); toast('区間を消しました'); saveCur(); }
+function toggleMirror(){ mirror = !mirror; $('ytbox').classList.toggle('mirror', mirror); renderControls(); toast(mirror ? '反転 オン' : '反転 オフ（元の向き）'); }
+function isBig(){ return !!(document.fullscreenElement || document.webkitFullscreenElement) || document.body.classList.contains('pseudo'); }
+function toggleBig(){
+  const el = $('player');
+  if(document.fullscreenElement || document.webkitFullscreenElement){ (document.exitFullscreen || document.webkitExitFullscreen).call(document); return; }
+  if(document.body.classList.contains('pseudo')){ document.body.classList.remove('pseudo'); updBig(); return; }
+  const req = el.requestFullscreen || el.webkitRequestFullscreen;
+  const pseudo = () => { document.body.classList.add('pseudo'); updBig(); };
+  if(req){ try{ const p = req.call(el); if(p && p.catch) p.catch(pseudo); }catch(e){ pseudo(); } } else pseudo();
+}
+function updBig(){ $('bigBtn').textContent = isBig() ? '元に戻す' : '大きく'; $('bigBtn').classList.toggle('on', isBig()); }
+document.addEventListener('fullscreenchange', updBig); document.addEventListener('webkitfullscreenchange', updBig);
+
+$('playBtn').onclick = togglePlay;
+$('back').onclick = () => jump(-5); $('fwd').onclick = () => jump(5);
+$('speeds').onclick = e => { const b = e.target.closest('[data-sp]'); if(b) setSpeed(+b.dataset.sp); };
+$('setA').onclick = setA; $('setB').onclick = setB; $('loopBtn').onclick = toggleLoop; $('clearAB').onclick = clearAB;
+$('mirrorBtn').onclick = toggleMirror; $('bigBtn').onclick = toggleBig;
+$('tap').onclick = togglePlay; $('tap').ondblclick = toggleBig;
+$('seek').addEventListener('input', () => { dragging = true; if(ready()) $('time').textContent = fmt(+$('seek').value)+' / '+fmt(player.getDuration()); });
+$('seek').addEventListener('change', () => { if(ready()) player.seekTo(+$('seek').value, true); dragging = false; });
+
+function openFromInput(){
+  const id = parseId($('urlIn').value);
+  if(!id){ toast('YouTubeのURLとして読み取れませんでした'); return; }
+  $('urlIn').value = ''; $('urlIn').blur(); openVideo(id);
+}
+$('openForm').onsubmit = e => { e.preventDefault(); openFromInput(); };
+$('urlIn').addEventListener('paste', () => setTimeout(() => { if(parseId($('urlIn').value)) openFromInput(); }, 0));
+
+document.addEventListener('keydown', e => {
+  if(e.key === 'Escape' && document.body.classList.contains('pseudo')){ toggleBig(); return; }
+  if(e.target.closest('input, textarea') || e.ctrlKey || e.metaKey || e.altKey || !$('setup').hidden) return;
+  const k = e.key.toLowerCase(), map = {
+    ' ': togglePlay, 'k': togglePlay, 'arrowleft': () => jump(-5), 'arrowright': () => jump(5),
+    'a': setA, 'b': setB, 'r': toggleLoop, 'm': toggleMirror, 'f': toggleBig,
+    '-': () => stepSpeed(-1), '_': () => stepSpeed(-1), '+': () => stepSpeed(1), '=': () => stepSpeed(1), ';': () => stepSpeed(1)
+  };
+  if(map[k]){ e.preventDefault(); if(e.target.closest('button')) e.target.blur(); map[k](); }
+});
+
+/* 再生位置の表示と区間のくり返し */
+setInterval(() => {
+  if(!ready()) return;
+  const t = player.getCurrentTime() || 0, d = player.getDuration() || 0;
+  if(!dragging){ $('seek').max = d || 100; $('seek').value = t; $('time').textContent = fmt(t)+' / '+fmt(d); }
+  if(d && $('region').hidden === (cur.a != null || cur.b != null)) drawRegion();
+  if(cur.loop && cur.b != null && t >= cur.b && player.getPlayerState() === YT.PlayerState.PLAYING) player.seekTo(cur.a ?? 0, true);
+}, 100);
+
+renderControls();
+boot();
+}
+</script>
+</body>
+</html>
