@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>反転ブックマーク</title>
+<link href="https://fonts.googleapis.com/css2?family=Zen+Kaku+Gothic+New:wght@400;700;900&display=swap" rel="stylesheet">
+<style>
+:root{color-scheme:dark;--bg:#131316;--panel:#1c1c21;--line:#2d2d35;--ink:#f3f3f5;--sub:#a3a3ad;--acc:#4cc9f0;--accd:#163a47}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.7 "Zen Kaku Gothic New",system-ui,sans-serif;-webkit-text-size-adjust:100%;padding:max(20px,env(safe-area-inset-top,0px)) max(5vw,16px) calc(40px + env(safe-area-inset-bottom,0px))}
+main{max-width:760px;margin:0 auto}
+h1{font-size:clamp(26px,5vw,36px);line-height:1.15;margin:0 0 8px}
+h2{font-size:20px;margin:32px 0 10px}
+p{margin:0 0 12px;color:var(--sub)}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+ol{margin:0;padding-left:1.4em}
+li{margin:0 0 10px}
+.bm{display:inline-flex;align-items:center;gap:8px;min-height:52px;padding:0 22px;border-radius:12px;background:var(--acc);color:#04222c;font-weight:900;font-size:18px;text-decoration:none;cursor:grab}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:10px 0}
+button{font:inherit;min-height:44px;padding:0 16px;border-radius:10px;border:1px solid var(--acc);background:var(--accd);color:#dff6fd;cursor:pointer}
+textarea{width:100%;height:90px;font:12px/1.4 ui-monospace,monospace;background:#0e0e11;color:var(--sub);border:1px solid var(--line);border-radius:10px;padding:10px}
+kbd{font:inherit;border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;padding:0 6px;color:var(--ink)}
+b{color:var(--ink)}
+a{color:var(--acc)}
+#msg{color:var(--acc);font-weight:700}
+</style>
+</head>
+<body>
+<main>
+<h1>反転ブックマーク</h1>
+<p>埋め込みが禁止されていて反転プレイヤーで流せない動画も、YouTubeのページで押すだけで左右反転できます。右下に小さな操作盤（反転・速さ・区間リピート）が出ます。</p>
+
+<h2>PC（Chrome）に入れる</h2>
+<div class="card">
+<ol>
+<li>ブックマークバーが出ていなければ <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>B</kbd> を押して出します。</li>
+<li>下の水色のボタンを、マウスで<b>つかんだまま</b>ブックマークバーへ引っぱって離します。</li>
+<li>バーに「反転」が増えれば成功です。</li>
+</ol>
+<div class="row"><a class="bm" id="bm" href="javascript:(function(){var%20d=document,ID=&#x27;hanten-bm&#x27;;var%20old=d.getElementById(ID);if(old){old.remove();clearInterval(window.__hantenT);d.querySelectorAll(&#x27;video&#x27;).forEach(function(x){x.style.transform=&#x27;&#x27;;});return;}function%20V(){return%20d.querySelector(&#x27;%23movie_player%20video&#x27;)||d.querySelector(&#x27;video&#x27;);}if(!V()){alert(&#x27;%E5%8B%95%E7%94%BB%E3%81%8C%E8%A6%8B%E3%81%A4%E3%81%8B%E3%82%8A%E3%81%BE%E3%81%9B%E3%82%93%E3%80%82YouTube%E3%81%AE%E5%8B%95%E7%94%BB%E3%83%9A%E3%83%BC%E3%82%B8%E3%81%A7%E6%8A%BC%E3%81%97%E3%81%A6%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84%E3%80%82&#x27;);return;}var%20S={mir:true,sp:null,a:null,b:null,loop:true,min:false};function%20f(t){if(t==null)return&#x27;%E2%80%94&#x27;;t=Math.max(0,Math.floor(t));return%20Math.floor(t/60)+&#x27;:&#x27;+String(t%2560).padStart(2,&#x27;0&#x27;);}var%20st=d.createElement(&#x27;style&#x27;);st.textContent=&#x27;%23&#x27;+ID+&#x27;{position:fixed;right:12px;bottom:calc(12px%20+%20env(safe-area-inset-bottom,0px));z-index:2147483647;background:rgba(19,19,22,.94);color:%23f3f3f5;font:14px/1.3%20system-ui,sans-serif;border:1px%20solid%20%233a3a44;border-radius:12px;padding:8px;display:flex;flex-wrap:wrap;gap:6px;max-width:min(360px,calc(100vw%20-%2024px));box-shadow:0%206px%2024px%20rgba(0,0,0,.5)}&#x27;+&#x27;%23&#x27;+ID+&#x27;%20button{all:unset;cursor:pointer;min-height:36px;padding:0%2010px;display:inline-flex;align-items:center;background:%232a2a31;border:1px%20solid%20%2344444e;border-radius:8px;color:%23f3f3f5;font:14px%20system-ui,sans-serif;white-space:nowrap}&#x27;+&#x27;%23&#x27;+ID+&#x27;%20button.on{background:%23163a47;border-color:%234cc9f0;color:%23dff6fd}&#x27;+&#x27;%23&#x27;+ID+&#x27;%20.r{display:flex;flex-wrap:wrap;gap:6px;width:100%25;align-items:center}&#x27;+&#x27;%23&#x27;+ID+&#x27;%20.l{color:%23a3a3ad;font-size:12px;margin-right:2px}&#x27;+&#x27;%23&#x27;+ID+&#x27;.min%20.r{display:none}%23&#x27;+ID+&#x27;:not(.min)%20.chip{display:none}&#x27;;var%20p=d.createElement(&#x27;div&#x27;);p.id=ID;p.appendChild(st);function%20B(parent,label,fn){var%20b=d.createElement(&#x27;button&#x27;);b.type=&#x27;button&#x27;;b.textContent=label;b.addEventListener(&#x27;click&#x27;,function(e){e.stopPropagation();fn();draw();});parent.appendChild(b);return%20b;}function%20R(){var%20r=d.createElement(&#x27;div&#x27;);r.className=&#x27;r&#x27;;p.appendChild(r);return%20r;}var%20chip=B(p,&#x27;%E5%8F%8D%E8%BB%A2%20%E2%96%B2&#x27;,function(){S.min=false;});chip.className=&#x27;chip&#x27;;var%20r1=R(),r2=R(),r3=R();var%20bMir=B(r1,&#x27;%E5%8F%8D%E8%BB%A2&#x27;,function(){S.mir=!S.mir;});var%20sp=d.createElement(&#x27;span&#x27;);sp.className=&#x27;l&#x27;;sp.textContent=&#x27;%E9%80%9F%E3%81%95&#x27;;r1.appendChild(sp);var%20bSp=[0.5,0.75,1,1.25,1.5].map(function(s){var%20b=B(r1,String(s),function(){S.sp=s;V().playbackRate=s;});b.dataset.s=s;return%20b;});var%20bA=B(r2,&#x27;&#x27;,function(){var%20t=Math.round(V().currentTime*10)/10;if(S.b!=null&amp;&amp;t&gt;=S.b-0.5)S.b=null;S.a=t;});var%20bB=B(r2,&#x27;&#x27;,function(){var%20t=Math.round(V().currentTime*10)/10;if(t&lt;=(S.a||0)+0.5){return;}S.b=t;if(S.loop)V().currentTime=S.a||0;});var%20bL=B(r2,&#x27;%E3%81%8F%E3%82%8A%E8%BF%94%E3%81%97&#x27;,function(){S.loop=!S.loop;});B(r3,&#x27;%E5%8C%BA%E9%96%93%E3%82%92%E6%B6%88%E3%81%99&#x27;,function(){S.a=null;S.b=null;});B(r3,&#x27;%E2%88%925%E7%A7%92&#x27;,function(){V().currentTime=Math.max(0,V().currentTime-5);});B(r3,&#x27;%EF%BC%8B5%E7%A7%92&#x27;,function(){V().currentTime=V().currentTime+5;});B(r3,&#x27;%E5%B0%8F%E3%81%95%E3%81%8F&#x27;,function(){S.min=true;});B(r3,&#x27;%E7%B5%82%E3%82%8F%E3%82%8B&#x27;,function(){p.remove();clearInterval(window.__hantenT);d.querySelectorAll(&#x27;video&#x27;).forEach(function(x){x.style.transform=&#x27;&#x27;;});});function%20draw(){bMir.className=S.mir?&#x27;on&#x27;:&#x27;&#x27;;bSp.forEach(function(b){var%20cur=S.sp==null?V().playbackRate:S.sp;b.className=(+b.dataset.s===cur)?&#x27;on&#x27;:&#x27;&#x27;;});bA.textContent=&#x27;%E3%81%93%E3%81%93%E3%81%8B%E3%82%89%20&#x27;+f(S.a);bA.className=S.a!=null?&#x27;on&#x27;:&#x27;&#x27;;bB.textContent=&#x27;%E3%81%93%E3%81%93%E3%81%BE%E3%81%A7%20&#x27;+f(S.b);bB.className=S.b!=null?&#x27;on&#x27;:&#x27;&#x27;;bL.className=S.loop?&#x27;on&#x27;:&#x27;&#x27;;p.className=S.min?&#x27;min&#x27;:&#x27;&#x27;;}d.body.appendChild(p);draw();window.__hantenT=setInterval(function(){var%20v=V();if(!v)return;var%20want=S.mir?&#x27;scaleX(-1)&#x27;:&#x27;&#x27;;if(v.style.transform!==want)v.style.transform=want;if(S.sp!=null&amp;&amp;v.playbackRate!==S.sp)v.playbackRate=S.sp;if(S.loop){if(S.b!=null&amp;&amp;v.currentTime&gt;=S.b&amp;&amp;!v.paused)v.currentTime=S.a||0;else%20if(v.ended&amp;&amp;(S.a!=null||S.b!=null)){v.currentTime=S.a||0;v.play();}}},100);})();" onclick="event.preventDefault();document.getElementById('msg').textContent='ここでは押さずに、ブックマークバーへ引っぱってください';">◀▶ 反転</a></div>
+<p id="msg"></p>
+</div>
+
+<h2>スマホ（iPhoneのSafari）に入れる</h2>
+<div class="card">
+<ol>
+<li>下の「コードをコピー」を押します。</li>
+<li>Safariでこのページを開いたまま、下の共有ボタン（□に↑）→「ブックマークを追加」→ 名前を<b>反転</b>にして「保存」。</li>
+<li>下の本のマーク →「編集」→ いま作った「反転」を押す → URL欄の文字を全部消して、コピーしたコードを貼り付け →「完了」。</li>
+</ol>
+<div class="row"><button type="button" id="copy">コードをコピー</button><span id="copied"></span></div>
+<textarea id="code" readonly>javascript:(function(){var%20d=document,ID=&#x27;hanten-bm&#x27;;var%20old=d.getElementById(ID);if(old){old.remove();clearInterval(window.__hantenT);d.querySelectorAll(&#x27;video&#x27;).forEach(function(x){x.style.transform=&#x27;&#x27;;});return;}function%20V(){return%20d.querySelector(&#x27;%23movie_player%20video&#x27;)||d.querySelector(&#x27;video&#x27;);}if(!V()){alert(&#x27;%E5%8B%95%E7%94%BB%E3%81%8C%E8%A6%8B%E3%81%A4%E3%81%8B%E3%82%8A%E3%81%BE%E3%81%9B%E3%82%93%E3%80%82YouTube%E3%81%AE%E5%8B%95%E7%94%BB%E3%83%9A%E3%83%BC%E3%82%B8%E3%81%A7%E6%8A%BC%E3%81%97%E3%81%A6%E3%81%8F%E3%81%A0%E3%81%95%E3%81%84%E3%80%82&#x27;);return;}var%20S={mir:true,sp:null,a:null,b:null,loop:true,min:false};function%20f(t){if(t==null)return&#x27;%E2%80%94&#x27;;t=Math.max(0,Math.floor(t));return%20Math.floor(t/60)+&#x27;:&#x27;+String(t%2560).padStart(2,&#x27;0&#x27;);}var%20st=d.createElement(&#x27;style&#x27;);st.textContent=&#x27;%23&#x27;+ID+&#x27;{position:fixed;right:12px;bottom:calc(12px%20+%20env(safe-area-inset-bottom,0px));z-index:2147483647;background:rgba(19,19,22,.94);color:%23f3f3f5;font:14px/1.3%20system-ui,sans-serif;border:1px%20solid%20%233a3a44;border-radius:12px;padding:8px;display:flex;flex-wrap:wrap;gap:6px;max-width:min(360px,calc(100vw%20-%2024px));box-shadow:0%206px%2024px%20rgba(0,0,0,.5)}&#x27;+&#x27;%23&#x27;+ID+&#x27;%20button{all:unset;cursor:pointer;min-height:36px;padding:0%2010px;display:inline-flex;align-items:center;background:%232a2a31;border:1px%20solid%20%2344444e;border-radius:8px;color:%23f3f3f5;font:14px%20system-ui,sans-serif;white-space:nowrap}&#x27;+&#x27;%23&#x27;+ID+&#x27;%20button.on{background:%23163a47;border-color:%234cc9f0;color:%23dff6fd}&#x27;+&#x27;%23&#x27;+ID+&#x27;%20.r{display:flex;flex-wrap:wrap;gap:6px;width:100%25;align-items:center}&#x27;+&#x27;%23&#x27;+ID+&#x27;%20.l{color:%23a3a3ad;font-size:12px;margin-right:2px}&#x27;+&#x27;%23&#x27;+ID+&#x27;.min%20.r{display:none}%23&#x27;+ID+&#x27;:not(.min)%20.chip{display:none}&#x27;;var%20p=d.createElement(&#x27;div&#x27;);p.id=ID;p.appendChild(st);function%20B(parent,label,fn){var%20b=d.createElement(&#x27;button&#x27;);b.type=&#x27;button&#x27;;b.textContent=label;b.addEventListener(&#x27;click&#x27;,function(e){e.stopPropagation();fn();draw();});parent.appendChild(b);return%20b;}function%20R(){var%20r=d.createElement(&#x27;div&#x27;);r.className=&#x27;r&#x27;;p.appendChild(r);return%20r;}var%20chip=B(p,&#x27;%E5%8F%8D%E8%BB%A2%20%E2%96%B2&#x27;,function(){S.min=false;});chip.className=&#x27;chip&#x27;;var%20r1=R(),r2=R(),r3=R();var%20bMir=B(r1,&#x27;%E5%8F%8D%E8%BB%A2&#x27;,function(){S.mir=!S.mir;});var%20sp=d.createElement(&#x27;span&#x27;);sp.className=&#x27;l&#x27;;sp.textContent=&#x27;%E9%80%9F%E3%81%95&#x27;;r1.appendChild(sp);var%20bSp=[0.5,0.75,1,1.25,1.5].map(function(s){var%20b=B(r1,String(s),function(){S.sp=s;V().playbackRate=s;});b.dataset.s=s;return%20b;});var%20bA=B(r2,&#x27;&#x27;,function(){var%20t=Math.round(V().currentTime*10)/10;if(S.b!=null&amp;&amp;t&gt;=S.b-0.5)S.b=null;S.a=t;});var%20bB=B(r2,&#x27;&#x27;,function(){var%20t=Math.round(V().currentTime*10)/10;if(t&lt;=(S.a||0)+0.5){return;}S.b=t;if(S.loop)V().currentTime=S.a||0;});var%20bL=B(r2,&#x27;%E3%81%8F%E3%82%8A%E8%BF%94%E3%81%97&#x27;,function(){S.loop=!S.loop;});B(r3,&#x27;%E5%8C%BA%E9%96%93%E3%82%92%E6%B6%88%E3%81%99&#x27;,function(){S.a=null;S.b=null;});B(r3,&#x27;%E2%88%925%E7%A7%92&#x27;,function(){V().currentTime=Math.max(0,V().currentTime-5);});B(r3,&#x27;%EF%BC%8B5%E7%A7%92&#x27;,function(){V().currentTime=V().currentTime+5;});B(r3,&#x27;%E5%B0%8F%E3%81%95%E3%81%8F&#x27;,function(){S.min=true;});B(r3,&#x27;%E7%B5%82%E3%82%8F%E3%82%8B&#x27;,function(){p.remove();clearInterval(window.__hantenT);d.querySelectorAll(&#x27;video&#x27;).forEach(function(x){x.style.transform=&#x27;&#x27;;});});function%20draw(){bMir.className=S.mir?&#x27;on&#x27;:&#x27;&#x27;;bSp.forEach(function(b){var%20cur=S.sp==null?V().playbackRate:S.sp;b.className=(+b.dataset.s===cur)?&#x27;on&#x27;:&#x27;&#x27;;});bA.textContent=&#x27;%E3%81%93%E3%81%93%E3%81%8B%E3%82%89%20&#x27;+f(S.a);bA.className=S.a!=null?&#x27;on&#x27;:&#x27;&#x27;;bB.textContent=&#x27;%E3%81%93%E3%81%93%E3%81%BE%E3%81%A7%20&#x27;+f(S.b);bB.className=S.b!=null?&#x27;on&#x27;:&#x27;&#x27;;bL.className=S.loop?&#x27;on&#x27;:&#x27;&#x27;;p.className=S.min?&#x27;min&#x27;:&#x27;&#x27;;}d.body.appendChild(p);draw();window.__hantenT=setInterval(function(){var%20v=V();if(!v)return;var%20want=S.mir?&#x27;scaleX(-1)&#x27;:&#x27;&#x27;;if(v.style.transform!==want)v.style.transform=want;if(S.sp!=null&amp;&amp;v.playbackRate!==S.sp)v.playbackRate=S.sp;if(S.loop){if(S.b!=null&amp;&amp;v.currentTime&gt;=S.b&amp;&amp;!v.paused)v.currentTime=S.a||0;else%20if(v.ended&amp;&amp;(S.a!=null||S.b!=null)){v.currentTime=S.a||0;v.play();}}},100);})();</textarea>
+</div>
+
+<h2>使い方</h2>
+<div class="card">
+<ol>
+<li>YouTubeで動画を開きます（スマホはYouTubeアプリではなく<b>Safari</b>で開く）。</li>
+<li>PCはブックマークバーの「反転」を押します。スマホはアドレス欄に「反転」と打つと出てくるブックマークを押します。</li>
+<li>動画が左右反転して、右下に操作盤が出ます。「ここから」「ここまで」で区間リピート、「小さく」でたためます。</li>
+<li>もう一度「反転」を押すか「終わる」で元に戻ります。</li>
+</ol>
+<p style="margin-top:10px">YouTubeの全画面ボタンを押すと反転が外れることがあります。大きく見たいときはブラウザの画面を広げてください。履歴の保存はありません。</p>
+</div>
+<p style="margin-top:24px"><a href="./">← 反転プレイヤーに戻る</a></p>
+</main>
+<script>
+{
+const btn=document.getElementById('copy'),ta=document.getElementById('code'),out=document.getElementById('copied');
+btn.onclick=async()=>{
+  try{await navigator.clipboard.writeText(ta.value);out.textContent='コピーしました';}
+  catch(e){ta.focus();ta.select();try{document.execCommand('copy');out.textContent='コピーしました';}catch(e2){out.textContent='下の枠を長押しして全部選んでコピーしてください';}}
+};
+}
+</script>
+</body>
+</html>

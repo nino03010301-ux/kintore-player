@@ -33,6 +33,7 @@ button.on{background:var(--accd);border-color:var(--acc);color:#dff6fd}
 .brand svg{width:26px;height:26px}
 .open{flex:1 1 380px;display:flex;gap:8px}
 .open input{flex:1;min-height:44px;font-size:16px;padding:0 14px;border-radius:10px;border:1px solid var(--line);background:#0e0e11}
+.bmlink{color:var(--sub);font-size:14px;text-decoration:none;white-space:nowrap}.bmlink:hover{color:var(--acc)}
 .save{font-size:14px;color:var(--sub);display:flex;align-items:center;gap:6px}
 .save::before{content:"";width:9px;height:9px;border-radius:50%;background:#55555f}
 .save.ok::before{background:var(--ok)}.save.saving::before{background:var(--acc)}.save.bad{color:var(--bad);border-color:var(--bad)}.save.bad::before{background:var(--bad)}
@@ -110,6 +111,7 @@ body.pseudo{overflow:hidden}
     <input id="urlIn" type="url" inputmode="url" placeholder="YouTubeのURLを貼る" autocomplete="off" aria-label="YouTubeのURL">
     <button type="submit" class="primary">開く</button>
   </form>
+  <a class="bmlink" href="bookmarklet.html">反転ブックマーク</a>
   <button id="saveStatus" class="save" type="button"><span id="saveText">準備中…</span></button>
 </header>
 <div id="banner" class="banner" hidden><span id="bannerText"></span><button id="bannerRetry" type="button" hidden>もう一度保存</button></div>
@@ -123,7 +125,7 @@ body.pseudo{overflow:hidden}
         <svg viewBox="0 0 260 120" aria-hidden="true"><rect x="2" y="2" width="256" height="116" rx="12" fill="none" stroke="#2d2d35" stroke-width="2"/><line x1="130" y1="14" x2="130" y2="106" stroke="#4cc9f0" stroke-dasharray="5 6" stroke-width="2"/><path d="M110 40 70 60l40 20z" fill="#4cc9f0" opacity=".9"/><path d="M150 40l40 20-40 20z" fill="#f3f3f5"/></svg>
         <p>上の欄にYouTubeのURLを貼ると、左右が反転した動画が流れます。鏡を見るように同じ向きで動けます。</p>
       </div>
-      <div id="err" class="err" hidden><p id="errText"></p><a id="errLink" href="#" target="_blank" rel="noopener">YouTubeで開く</a></div>
+      <div id="err" class="err" hidden><p id="errText"></p><p id="errHint" hidden>YouTubeで開いてから、ブックマークの「反転」を押すと反転できます。</p><a id="errLink" href="#" target="_blank" rel="noopener">YouTubeで開く</a><a href="bookmarklet.html">「反転」ブックマークの入れ方</a></div>
     </div>
 
     <div class="ctl">
@@ -381,6 +383,7 @@ function onErr(e){
   const msgs = {2:'URLが正しくないようです。', 5:'この動画はここでは再生できませんでした。', 100:'動画が見つかりません（削除されたか非公開です）。', 101:'この動画は持ち主が「他のサイトでの再生」を禁止しているため、ここでは再生できません。', 150:'この動画は持ち主が「他のサイトでの再生」を禁止しているため、ここでは再生できません。'};
   $('errText').textContent = (msgs[e.data] || 'この動画は再生できませんでした。') + '（エラー '+e.data+'）';
   $('errLink').href = 'https://www.youtube.com/watch?v=' + (cur ? cur.id : '');
+  $('errHint').hidden = !(e.data === 101 || e.data === 150);
   $('err').hidden = false;
 }
 function ready(){ return player && typeof player.getCurrentTime === 'function' && cur; }
